@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>nats</groupId>
-    <artifactId>DepRelTransducer</artifactId>
+    <artifactId>TrUDucer</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -65,7 +65,7 @@
     </dependencies>
     <build>
         <plugins>
-            <!-- This plugin sets up maven to use Java 7 -->
+            <!-- This plugin sets up maven to use Java 8 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -104,11 +104,11 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <finalName>DepRelTransducer</finalName>
+                    <finalName>TrUDucer</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                     <archive>
                         <manifest>
-                            <mainClass>nats.drt.startup.Main</mainClass>
+                            <mainClass>nats.truducer.startup.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

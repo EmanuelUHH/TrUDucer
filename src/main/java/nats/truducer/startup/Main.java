@@ -39,7 +39,8 @@ public class Main {
                         "A single CoNLL file or a whole directory can be converted based on given rule file; " +
                         "can compare directories, useful for testing the correctness of a rulefile with previously annotated trees." +
                         "Test the coverage of a rulefile with 'coverage' or look at a conversion process in detail with 'show'.\n\n" +
-                        "It is assumed that the source dependency relations are in CAPS, while the UD labels are in all lowercase.");
+                        "For the compare and coverage subcommand it is assumed that the source dependency relations are in CAPS, " +
+                        "while the UD labels are in all lowercase.  Otherwise no assumptions about the labels are made.");
 
         Subparsers subparsers = parser.addSubparsers().dest("subparser_name")
                 .help("The various subcommands.");

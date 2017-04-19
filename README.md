@@ -33,8 +33,9 @@ of a rulefile with previously annotated trees.Test the coverage of a
 rulefile with 'coverage' or look at a conversion process in detail
 with 'show'.
 
-It is assumed that the source dependency relations are in CAPS, while
-the UD labels are in all lowercase.
+For the compare and coverage subcommand it is assumed that the source
+dependency relations are in CAPS, while the UD labels are in all
+lowercase.  Otherwise no assumptions about the labels are made.
 
 positional arguments:
   {conv,convall,compare,coverage,show}

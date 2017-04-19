@@ -1,0 +1,120 @@
+expansion predicatePos = [VAFIN, VVFIN, VVPP, VVINF, VVIZU, ADJD, ADJA];
+expansion advclIndicator = [OBJA, OBJD, AUX];
+
+
+########## S-PRED invert 
+parent:$x({n:PRED(n2:PN(), ?predr), ?fr}, ?r) -> n2:$x(n:case(), parent:cop(), ?predr, ?r, ?fr);
+parent:$x({n:PRED(?predr), ?fr}, ?r) -> n:$x(parent:cop(), ?predr, ?r, ?fr);
+# PRED auch als xcomp 100013
+
+
+########## NEB -> ???  / things that have a KONJ
+# NEB can be ccomp or advcl.  If an object is present already, NEB is most likely advcl
+p({n1:NEB(n2:KONJ()), n3:advclIndicator()}) -> p(n1:advcl(n2()), n3()); # don't convert the obj
+n:SUBJC(?r) -> n:csubj(?r); # has a KONJ dependent
+n:NEB(m:KONJ()) -> n:ccomp(m()); # 100009
+
+n:NEB() -> n:xcomp();
+n:OBJI() -> n:xcomp();
+
+n:OBJC(m:KONJ(), ?r) -> n:ccomp(m(), ?r); # 100009 # potential problem with KONJ children
+n:KONJ() -> n:mark(); # möglicherweise zusammenkürzen mit den regeln da drüber
+n:OBJC(m:ADV()) -> n:ccomp(m:mark());
+
+n:REL(?r) -> n:acl(?r); # 100009, 100018
+
+########## AUX invert 
+# aux invert, with CSUBJ or S
+parent:$x({n:AUX(?auxr), ?fr}, ?r) -> n:$x(parent:aux(), ?auxr, ?r, ?fr);
+# AUX auch als cop, bei 'werden' (100017) check über lemma möglich
+
+########## S root convert
+# TODO this should be the other way round, S->root convert as a special case where the parent is <ROOT> 
+p:root({n:S()}) -> p(n:ccomp()); # 100014
+n:S() -> n:root();
+
+# KOM-CJ flip
+p({n1:KON(n2:KON())}) -> p(n1:conj(), n2()); # 100104
+n1:KON(n2:CJ(?cjr), ?konr) -> n2:conj(n1:cc(), ?konr, ?cjr);
+p.VVFIN({n.VVFIN:KON()}) -> p(n:parataxis()); # 100335  needs more verb forms
+
+n1:KOM(n2:CJ(n3:PN(), ?r2), ?r1) -> n3:obl(n1:case(), n2:case(), ?r1, ?r2);  # 10007
+n1:KOM(n2:CJ(?cjr), ?komr) -> n2:conj(n1:cc(), ?komr, ?cjr);
+
+########## PP-PN flip
+# TODO all rules with all the PoS tags
+# 10006
+p.predicatePos({n1:PP(n2:PN(n3:PN()))}) -> p(n3:obl (n1:advmod(), n2:case()));
+p             ({n1:PP(n2:PN(n3:PN()))}) -> p(n3:nmod(n1:advmod(), n2:case()));
+# two different conversions depending on PoS tag of head
+# 100104 VVIZU, 100045 ADJD, 10008 ADJA
+p.predicatePos({n1:PP(n2:PN(?pnr), ?ppr)}) -> p(n2:obl (n1:case(), ?pnr, ?ppr));
+p             ({n1:PP(n2:PN(?pnr), ?ppr)}) -> p(n2:nmod(n1:case(), ?pnr, ?ppr));
+# 100091 100649 VVFIN, 10008 ADJA
+p.predicatePos({n:ZEIT()}) -> p(n:obl ());
+                n:ZEIT()   ->   n:nmod();
+n:PP(?r) -> n:advmod(?r); # if no PN dependent it is simply advmod (100009) davor
+# n:PP(?r) -> n:case(?r); # 100020, 100025  darum    welches ist jetzt richtig?
+
+########## ADV advmod
+n1:ADV(n2:OBJA2(), ?r) -> n2:acl(n1:cop(), ?r);   # 100135
+n1:ADV(n2:OBJG(?n2r), ?n1r) -> n2:nmod(n1:case(), ?n2r, ?n1r);
+p({n:ADV(?r)}) -> p(n:advmod(), ?r);  # 29568
+
+n:OBJA2() -> n:obj(); # 100335
+n:OBJG() -> n:obj(); # 100155
+
+n1:OBJP(n2.NN:PN(?pnr), ?r) -> n2:obl(n1:case(), ?pnr, ?r); # 100010
+n1:OBJP(n2:PN(?pnr), ?r) -> n2:xcomp(n1:case(), ?pnr, ?r); # 100011
+n:OBJP() -> n:obj(); # 100033
+
+n:GRAD() -> n:obl(); # 10007
+
+########## ETH
+# p(n1:obj(), {n2:ETH()}) -> p(n1(), n2:iobj());  # if another obj exists, make it iobj
+p({n1:OBJA(), n2:ETH()}) -> p(n1(), n2:iobj());
+n:ETH() -> n:obj();
+
+########## OBJA / OBJD
+p({n1:OBJA(), n2:OBJD()}) -> p(n1:obj(), n2:iobj()); # if both are present, OBJA is main obj (100022, 100020)
+n:OBJA() -> n:obj();
+n:OBJD() -> n:obj();
+
+########## APP -> flat / compound / appos
+parent.NE({n.NE:APP(?r)}) -> parent(n:flat(), ?r); # 100003, 100011 #### gilt nicht bei 100014
+# subsequent dependents should be attached to the head of the flat relation
+parent.NE({n.NN:APP(?r)}) -> parent(n:appos(?r)); # 100011
+parent.NN({n.NN:APP(?r)}) -> parent(n:compound(?r)); # 100008
+parent({n.NN:APP()}) -> parent(n:compound()); # 100008 parent 
+parent.NN:$x({n.NE:APP(?r)}, ?r2) -> n:$x(parent:compound(), ?r, ?r2); # 100014, 100017
+pp(p.PIS:$x({n.PIS:APP()}, ?r)) -> pp(n:$x(p:det(), ?r));  # 100037
+
+########## ATTR -> nummod / amod
+n.CARD:ATTR() -> n:nummod();
+n:ATTR() -> n:amod();
+
+########## parataxis
+r(pp(p({n:PAR()}))) -> r(pp(p(), n()));  # pull up
+n:PAR() -> n:parataxis();
+# 100025 parataxis schwierig
+
+########## simple one-to-one mappings
+
+n:SUBJ() -> n:nsubj();
+n:NP2() -> n:nsubj();
+
+n:DET(?r) -> n:det(?r);
+
+n:GMOD(?r) -> n:nmod(?r);
+
+n:AVZ(?r) -> n:mark(?r);
+
+n:EXPL(?r) -> n:expl(?r);
+
+n:PART() -> n:mark();
+
+
+n:VOK() -> n:vocative();
+
+n:ROOT(?r) -> n:ROOT(?r);
+

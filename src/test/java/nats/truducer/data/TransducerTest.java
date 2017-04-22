@@ -115,6 +115,13 @@ public class TransducerTest {
             "n1:DET(?ns)  -> n1:det(?ns);" +
             "parent({n1:OBJA(?r1), n2:OBJD(?r2)}, ?r3) -> parent(n1:obj(?r1), n2:iobj(?r2), ?r3);";
 
+    // groovy test
+    private String testTransducer3d =
+            "n:S() -> n:root();" +
+            "p({n()}) -> p(n:left()) :- { n.getOrd() < p.getOrd() };" +
+            "n() -> n:right();";
+
+
     private String testSentence4 =
             "1\t(\t(\t$(\t$(\t_\t0\tROOT\t_\t_\n" +
             "2\tChristiane\tChristiane\tN\tNE\tgender=fem|person=third|number=sg|subcat=Vorname\t0\tS\t_\t_\n" +
@@ -260,6 +267,19 @@ public class TransducerTest {
         Assert.assertEquals("det", getNode(newTree, 4).getDeprel());
         Assert.assertEquals("iobj", getNode(newTree, 3).getDeprel());
         Assert.assertEquals("obj", getNode(newTree, 5).getDeprel());
+    }
+
+    public void testTransducer3d() {
+        TransducerParser parser = stringToParser(testTransducer3c);
+        Transducer t = parser.transducer().t;
+
+        Root newTree = t.applyTo(stringToTree(testSentence3));
+
+        Assert.assertEquals("root", getNode(newTree, 2).getDeprel());
+        Assert.assertEquals("left", getNode(newTree, 1).getDeprel());
+        Assert.assertEquals("left", getNode(newTree, 4).getDeprel());
+        Assert.assertEquals("right", getNode(newTree, 3).getDeprel());
+        Assert.assertEquals("right", getNode(newTree, 5).getDeprel());
     }
 
     @Test

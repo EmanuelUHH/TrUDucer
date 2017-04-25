@@ -1,3 +1,44 @@
+# Comments start with a # (who would have guessed!)
+# you can define shorthands for groups of labels like this:
+# expansion predicatePos = [VAFIN, VVFIN, VVPP, VVINF, VVIZU, ADJD, ADJA];
+
+# the tree structure is represented as element(subelem1, subelem2 ...)
+# and can be arbitrarily nested. The subelements are unordered!
+# each element is a variable which has to occur on the right hand side.
+
+# a variable can be restricted by its dependency label:
+# n:PRED only matches elements with the PRED label
+
+# You can also restrict matches by PoS:
+# n.VVFIN:KON only matches nodes with PoS=VVFIN and label=KON
+# Variables starting with ? are catch-all variables that match all sub
+# nodes not matched by other variables.
+
+# you can match above the frontier (i.e. match already converted
+# nodes) by explicitly setting the frontier with {} like below in
+# S-Pred invert: the “parent” node is already translated and the
+# current frontier is below the parent node.  If you don’t declare the
+# position of the frontier, it is assumed to be above the root of the
+# left-hand-side.
+
+# If you need to re-use a dependency label, you can match the label of
+# a node with $var like this:
+# x:$label(....) -> y:$label
+# y will have the label x had befor the translation.  this usually
+# only makes sense for already translated nodes.
+
+# You can add groovy code to restrict matching based on the current
+# tree and the resulting tree:
+# p(\{n:APP()\}) -> p(n:compound()) :- {n.getOrd() < p.getOrd()};
+
+# will only be applied if n is left of p. The variables are
+# cz.ufal.udapi.core.Node Objects.  you can access the elements from
+# the resulting tree by prefixing the variable name with an
+# underscore, e.g. _n and _p.  The rule is only applied if the groovy
+# code returns true.  You can change the data structures in groovy but
+# be careful with that!  One use case would be to mark nodes for
+# further manual inspection.
+
 expansion predicatePos = [VAFIN, VVFIN, VVPP, VVINF, VVIZU, ADJD, ADJA];
 expansion advclIndicator = [OBJA, OBJD, AUX];
 

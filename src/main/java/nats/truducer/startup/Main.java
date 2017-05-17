@@ -8,6 +8,7 @@ import nats.truducer.data.Transducer;
 import nats.truducer.deprel.CoverageChecker;
 import nats.truducer.deprel.TreeComparator;
 import nats.truducer.gui.MainWindow;
+import nats.truducer.gui.MainWindowController;
 import nats.truducer.io.ruleparsing.TransducerLexer;
 import nats.truducer.io.ruleparsing.TransducerParser;
 import net.sourceforge.argparse4j.ArgumentParsers;
@@ -79,6 +80,9 @@ public class Main {
                 .help("Show the conversion process of a single tree step by step in a GUI.");
         showTree.addArgument("input_file")
                 .help("The CoNNL file containing the tree to be converted.");
+        showTree.addArgument("transducer_file")
+                .nargs("?")
+                .help("The rule file.");
 
         Namespace ns = null;
         try {
@@ -216,13 +220,21 @@ public class Main {
         logger.info(String.format("%d nodes not converted.", incorrectNodes));
     }
 
-    private static void showTreeMain(Namespace ns) {
+    private static void showTreeMain(Namespace ns) throws IOException {
         String conllFilePath = ns.getString("input_file");
+        String transducerPath = ns.getString("transducer_file");
 
         Root tree = fileToTree(new File(conllFilePath));
+        Transducer transducer = null;
 
-        MainWindow win = new MainWindow();
-        SwingUtilities.invokeLater(() -> win.createAndShow(tree));
+        if (transducerPath != null) {
+            transducer = pathToTransducer(transducerPath);
+        }
+
+        MainWindowController controller = new MainWindowController();
+        controller.initWindow();
+        controller.setTree(tree);
+        controller.setTransducer(transducer);
     }
 
     private static Transducer pathToTransducer(String path) throws IOException {

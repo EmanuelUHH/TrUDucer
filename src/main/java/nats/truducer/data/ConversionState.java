@@ -13,12 +13,13 @@ public class ConversionState {
 
     private Root tree = null;
     private List<DepTreeFrontierNode> frontier = new ArrayList<>();
+    private Rule lastRule = null;
 
     private ConversionState() {
 
     }
 
-    ConversionState(Root tree) {
+    public ConversionState(Root tree) {
         this.tree = tree;
         DepTreeFrontierNode dtfn = new DepTreeFrontierNode(tree.getNode().getChildren());
         this.frontier.add(dtfn);
@@ -57,5 +58,16 @@ public class ConversionState {
         }
         sb.append("]");
         return sb.toString();
+    }
+
+    public void setLastRule(Rule rule) {
+        this.lastRule = rule;
+    }
+
+    /**
+     * The Rule which lead to this state.
+     */
+    public Rule getAppliedRule() {
+        return this.lastRule;
     }
 }

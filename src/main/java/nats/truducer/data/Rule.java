@@ -21,7 +21,9 @@ public class Rule {
 
     private Script groovyScript = null;
 
-    public Rule(Tree matchTree, ReplacementNode replacementTree, String groovycode) {
+    private final String origString;
+
+    public Rule(Tree matchTree, ReplacementNode replacementTree, String groovycode, String origString) {
         this.matchTree = matchTree;
         this.replacementTree = replacementTree;
         inferMissingStructure();
@@ -29,6 +31,7 @@ public class Rule {
             GroovyShell shell = new GroovyShell();
             groovyScript = shell.parse(groovycode);
         }
+        this.origString = origString;
     }
 
     public void validate() {
@@ -145,6 +148,7 @@ public class Rule {
 
         if (bindingCurrent != null) {
             result = currentState.deepCopy();
+            result.setLastRule(this);
             DepTreeFrontierNode fn2 = result.getFrontier().get(frontierNode);
             Binding bindingNew = Matcher.getBinding(matchTree.frontierNode, fn2);
             assert bindingNew != null; // can't be null if bindingCurrent != null
@@ -258,6 +262,7 @@ public class Rule {
 
     @Override
     public String toString() {
-        return matchTree.toString() + " -> " + replacementTree.toString();
+        return origString;
+        //return matchTree.toString() + " -> " + replacementTree.toString();
     }
 }

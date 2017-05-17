@@ -39,7 +39,7 @@ convrule[Map<String, List<String>> expansions] returns [ Rule rule ] :
      if ($rb != null) {
          groovyCode = $rb.getText();
      }
-     $rule = new Rule($mt.tree, $rt.tree, groovyCode);
+     $rule = new Rule($mt.tree, $rt.tree, groovyCode, _localctx.getText());
  };
 
 replacementNode returns [ ReplacementNode tree ] :

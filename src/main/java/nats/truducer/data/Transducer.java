@@ -51,4 +51,26 @@ public class Transducer {
 
         return states.peek().getTree();
     }
+
+    /**
+     * Calculate the next conversion state after this one.
+     * Returns null if no rule can be applied.
+     */
+    public ConversionState step(ConversionState current) {
+        logger.info("State: " + current.toString());
+        ConversionState next = null;
+        for (Rule r : this.rules) {
+            logger.debug(String.format("Testing rule: %s", r));
+            for (int i = 0; i < current.getFrontier().size(); i++) {
+                next = r.apply(current, i);
+                if (next != null) {
+                    break;
+                }
+            }
+            if (next != null) {
+                break;
+            }
+        }
+        return next;
+    }
 }

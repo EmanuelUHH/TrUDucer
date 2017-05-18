@@ -19,6 +19,12 @@ public class InteractiveConversionGUI implements InteractiveConversion {
 
     @Override
     public void decideLabel(Node node, String label1, String label2) {
-        JOptionPane.showMessageDialog(frame, String.format("Node: A: %s, B: %s", label1, label2));
+        Object[] possibilities = {label1, label2};
+        String chosen = null;
+        while (chosen == null) {
+            chosen = (String) JOptionPane.showInputDialog(frame, String.format("Decide the label for the Node '%s' (%s)", node.getForm(), node.getOrd()),
+                    "Interactive Conversion", JOptionPane.PLAIN_MESSAGE, null, possibilities, label1);
+        }
+        node.setDeprel(chosen);
     }
 }

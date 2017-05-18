@@ -17,15 +17,16 @@ import java.util.ArrayList;
 public class MainWindow {
 
     private static final SimpleParse EMPTY_PARSE = new SimpleParse(new ArrayList<SimpleWord>(), new ArrayList<Integer>(), new ArrayList<String>());
+    public final JFrame frame;
     public final JSlider zoomSlider;
     public final JTextField ruleTextField;
+    public final JButton prevButton;
     public final JButton nextButton;
     public DepTree<SimpleParse, SimpleWord> depTree = null;
     private JScrollPane scrollPane;
 
     public MainWindow(MainWindowController controller) {
-
-        JFrame frame = new JFrame();
+        frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Container pane = frame.getContentPane();
 
@@ -57,6 +58,9 @@ public class MainWindow {
         ruleTextField = new JTextField();
         ruleTextField.setEditable(false);
         bottomPane.add(ruleTextField);
+        prevButton = new JButton("<");
+        prevButton.addActionListener(controller);
+        bottomPane.add(prevButton);
         nextButton = new JButton(">");
         nextButton.addActionListener(controller);
         bottomPane.add(nextButton);
@@ -88,5 +92,9 @@ public class MainWindow {
             depTree.setZoomFactor(Math.pow(2.0, (((double) zoomSlider.getValue()) / 4.0)));
             depTree.redraw();
         }
+
+        depTree.highlight(depTree.getNode(0));
+        depTree.highlight(depTree.getNode(1));
+        depTree.highlight(depTree.getNode(2));
     }
 }

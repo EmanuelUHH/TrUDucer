@@ -3,6 +3,7 @@ package nats.truducer.data;
 import cz.ufal.udapi.core.Node;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import nats.truducer.interactive.InteractiveConversion;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +21,7 @@ public class Rule {
     private ReplacementNode replacementTree;
 
     private Script groovyScript = null;
+    private InteractiveConversion interactiveConversion = null;
 
     private final String origString;
 
@@ -37,6 +39,10 @@ public class Rule {
     public void validate() {
         if (matchTree.frontierNode == null)
             throw new IllegalStateException("The matchTree needs a frontier node");
+    }
+
+    public void setInteractiveConversion(InteractiveConversion ic) {
+        this.interactiveConversion = ic;
     }
 
     private ReplacementNode getNode(ReplacementNode root, String name) {
@@ -148,7 +154,7 @@ public class Rule {
 
         if (bindingCurrent != null) {
             result = currentState.deepCopy();
-            result.setLastRule(this);
+            result.setAppliedRule(this);
             DepTreeFrontierNode fn2 = result.getFrontier().get(frontierNode);
             Binding bindingNew = Matcher.getBinding(matchTree.frontierNode, fn2);
             assert bindingNew != null; // can't be null if bindingCurrent != null
@@ -165,6 +171,7 @@ public class Rule {
             if (groovyScript != null) {
                 groovy.lang.Binding scriptContext = new groovy.lang.Binding();
                 groovyScript.setBinding(scriptContext);
+                scriptContext.setProperty("interactive", interactiveConversion);
                 addProperties(scriptContext, bindingCurrent, "");  // previous nodes without prefix
                 addProperties(scriptContext, bindingNew, "_");     // new nodes prefixed with "_"
                 Object scriptReturnVal = groovyScript.run();

@@ -13,7 +13,7 @@ public class ConversionState {
 
     private Root tree = null;
     private List<DepTreeFrontierNode> frontier = new ArrayList<>();
-    private Rule lastRule = null;
+    private Rule appliedRule = null;
 
     private ConversionState() {
 
@@ -60,14 +60,14 @@ public class ConversionState {
         return sb.toString();
     }
 
-    public void setLastRule(Rule rule) {
-        this.lastRule = rule;
+    public void setAppliedRule(Rule rule) {
+        this.appliedRule = rule;
     }
 
     /**
      * The Rule which lead to this state.
      */
     public Rule getAppliedRule() {
-        return this.lastRule;
+        return this.appliedRule;
     }
 }

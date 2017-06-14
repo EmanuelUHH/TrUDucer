@@ -12,6 +12,7 @@ import nats.truducer.gui.MainWindowController;
 import nats.truducer.io.ruleparsing.TransducerLexer;
 import nats.truducer.io.ruleparsing.TransducerParser;
 import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.impl.type.StringArgumentType;
 import net.sourceforge.argparse4j.inf.*;
 import org.antlr.v4.runtime.ANTLRFileStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -75,6 +76,8 @@ public class Main {
                 .help("Check how many dependency relations are converted; in a single directory.");
         coverage.addArgument("dir")
                 .help("The directory containing CoNLL files to be checked for completeness of conversion.");
+        coverage.addArgument("original_dir")
+                .help("The directory containing the original conll files.");
 
         Subparser showTree = subparsers.addParser("show")
                 .help("Show the conversion process of a single tree step by step in a GUI.");
@@ -198,26 +201,43 @@ public class Main {
 
     private static void checkCoverageMain(Namespace ns) {
         String genDir = ns.getString("dir");
+        String origDir = ns.getString("original_dir");
 
-        int correctNodes = 0;
-        int puncuationNodes = 0;
-        int incorrectNodes = 0;
 
         File[] files = new File(genDir).listFiles();
         Arrays.sort(files);
 
+        CoverageChecker cc = new CoverageChecker();
+
         for (File file : files) {
             Root r = fileToTree(file);
-            CoverageChecker cc = new CoverageChecker(r);
-            cc.check();
-            correctNodes += cc.getConverted().size();
-            puncuationNodes += cc.getPunctuation().size();
-            incorrectNodes += cc.getNotConverted().size();
+            Root orig = fileToTree(new File(origDir + "/" + file.getName()));
+            cc.check(orig, r);
         }
+
+        int correctNodes = cc.getConverted().size();
+        int puncuationNodes = cc.getPunctuation().size();
+        int blockers = cc.getBlockers().size();
+        int indirectly = cc.getIndirectlyAffected().size();
 
         logger.info(String.format("%d nodes converted correctly.", correctNodes));
         logger.info(String.format("%d nodes punctuation.", puncuationNodes));
-        logger.info(String.format("%d nodes not converted.", incorrectNodes));
+        logger.info(String.format("%d nodes blockers.", blockers));
+        logger.info(String.format("%d nodes not converted follow up.", indirectly));
+
+        // Perform relevant calculations.
+        int totalWithoutPunct = correctNodes + blockers + indirectly;
+        double correctPercentage = (double)correctNodes / (double)totalWithoutPunct;
+        double blockersPercentage = (double)blockers / (double)totalWithoutPunct;
+        double indirectPercentage = (double)indirectly / (double)totalWithoutPunct;
+
+        logger.info(String.format("%d total without punctuation", totalWithoutPunct));
+        logger.info(String.format("%.5f correct", correctPercentage));
+        logger.info(String.format("%.5f blockers", blockersPercentage));
+        logger.info(String.format("%.5f indirect", indirectPercentage));
+
+        logger.info("\n" + cc.getTableAsString());
+        logger.info("\n" + cc.getBlockerStatsAsString());
     }
 
     private static void showTreeMain(Namespace ns) throws IOException {

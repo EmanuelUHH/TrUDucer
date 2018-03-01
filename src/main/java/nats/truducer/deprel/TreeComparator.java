@@ -27,28 +27,12 @@ public class TreeComparator {
         this.r2 = r2;
     }
 
-
-    private static Comparator<Node> ordComparator = new Comparator<Node>() {
-        @Override
-        public int compare(Node n1, Node n2) {
-            if (n1 == null || n2 == null)
-                throw new NullPointerException();
-
-            if (n1.getOrd() < n2.getOrd())
-                return -1;
-            else if (n1.getOrd() == n2.getOrd())
-                return 0;
-            else
-                return 1;
-        }
-    };
-
     public void compare() {
         // r1 is expected, r2 is generated
         List<Node> r1nodes = r1.getDescendants();
-        Collections.sort(r1nodes, ordComparator);
+        Collections.sort(r1nodes, new OrdComparator());
         List<Node> r2nodes = r2.getDescendants();
-        Collections.sort(r2nodes, ordComparator);
+        Collections.sort(r2nodes, new OrdComparator());
         if (r1nodes.size() != r2nodes.size())
             throw new IllegalStateException("Tree size does not match");
         for (int i = 0; i < r1nodes.size(); i++) {

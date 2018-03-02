@@ -6,6 +6,7 @@ import cz.ufal.udapi.core.io.impl.CoNLLUReader;
 import cz.ufal.udapi.core.io.impl.CoNLLUWriter;
 import nats.truducer.data.Transducer;
 import nats.truducer.deprel.CoverageChecker;
+import nats.truducer.deprel.PrecisionStats;
 import nats.truducer.deprel.TreeComparator;
 import nats.truducer.gui.MainWindow;
 import nats.truducer.gui.MainWindowController;
@@ -21,6 +22,7 @@ import org.apache.log4j.Logger;
 
 import javax.swing.*;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -71,6 +73,8 @@ public class Main {
                 .help("The directory containing the CoNNL files with the expected tree structures.");
         test.addArgument("actual_dir")
                 .help("The directory containing the CoNLL files with the actual tree structures.");
+        test.addArgument("original_dir")
+                .help("The directory containing the source CoNLL files.");
 
         Subparser coverage = subparsers.addParser("coverage")
                 .help("Check how many dependency relations are converted; in a single directory.");
@@ -157,6 +161,7 @@ public class Main {
         logger.info("Testing");
         String compDir = ns.getString("expected_dir");
         String genDir = ns.getString("actual_dir");
+        String origDir = ns.getString("original_dir");
 
         int punctuationNodes = 0;
         int ignoredNodes = 0;
@@ -165,7 +170,18 @@ public class Main {
         int correctNodes = 0;
         int completeMatch = 0;
 
-        File[] files = new File(genDir).listFiles();
+        FilenameFilter conllFilter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                String lowercaseName = name.toLowerCase();
+                if (lowercaseName.endsWith(".conll")) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        };
+
+        File[] files = new File(genDir).listFiles(conllFilter);
         Arrays.sort(files);
 
         for (File file : files) {
@@ -174,6 +190,7 @@ public class Main {
             Root generated = fileToTree(file);
             logger.debug("reading expected");
             Root expected = fileToTree(new File(compDir, file.getName()));
+            Root original = fileToTree(new File(origDir, file.getName()));
             TreeComparator tc = new TreeComparator(expected, generated);
             tc.compare();
             if (tc.matches()) {
@@ -197,6 +214,17 @@ public class Main {
         int total = punctuationNodes + ignoredNodes + notConvertedNodes + incorrectNodes + correctNodes;
         logger.info(String.format("%d nodes total", total));
         logger.info(String.format("%d/%d sentences correct", completeMatch, files.length));
+
+        PrecisionStats ps = new PrecisionStats();
+        for (File file : files) {
+            Root generated = fileToTree(file);
+            Root expected = fileToTree(new File(compDir, file.getName()));
+            Root original = fileToTree(new File(origDir, file.getName()));
+            ps.accumulate(original, expected, generated);
+        }
+        String x = ps.breakdownAsString();
+        logger.info("\n" + x);
+
     }
 
     private static void checkCoverageMain(Namespace ns) {

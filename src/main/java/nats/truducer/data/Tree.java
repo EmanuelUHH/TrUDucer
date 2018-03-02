@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by felix on 19/01/17.
+ * A tree as used on the left-hand side of a rule.
+ * It is used for matching.  The root does not need to be a frontier node
+ * which is why those things are stored seperately.
  */
 public class Tree {
 

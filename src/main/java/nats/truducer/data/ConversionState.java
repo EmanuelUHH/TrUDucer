@@ -7,7 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by felix on 01/02/17.
+ * The ConversionState encodes information about a tree that is currently being converted.
+ * In addition to the tree, the conversion frontier is kept track of.
+ * This is done seperately instead of with actual nodes in the tree for technical reasons,
+ * as to not mix content nodes and frontier nodes.
  */
 public class ConversionState {
 
@@ -19,12 +22,21 @@ public class ConversionState {
 
     }
 
+    /**
+     * Creates an initial Conversion state from the given tree, with a single frontier node,
+     * right above the root of the tree.
+     */
     public ConversionState(Root tree) {
         this.tree = tree;
         DepTreeFrontierNode dtfn = new DepTreeFrontierNode(tree.getNode().getChildren());
+        // tree.getNode().getChildren() returns the first 'real' node, as getChildren() returns the
+        // technical root.
         this.frontier.add(dtfn);
     }
 
+    /**
+     * Creates a deep copy of a Conversion state.
+     */
     public ConversionState deepCopy() {
         ConversionState copy = new ConversionState();
         copy.tree = this.tree.copyTree();
@@ -36,6 +48,9 @@ public class ConversionState {
         return copy;
     }
 
+    /**
+     * Conversion is finished if there are no more frontier nodes.
+     */
     public boolean finished() {
         return frontier.isEmpty();
     }

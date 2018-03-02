@@ -34,7 +34,7 @@ public class CoverageChecker {
         if (map.containsKey(key)) {
             map.put(key, map.get(key) + 1);
         } else {
-            map.put(key, 0);
+            map.put(key, 1);
         }
     }
 

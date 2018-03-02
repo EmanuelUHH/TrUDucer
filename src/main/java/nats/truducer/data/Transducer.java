@@ -7,7 +7,11 @@ import java.util.List;
 import java.util.Stack;
 
 /**
- * Created by felix on 16/01/17.
+ * A Transducer consists mainly of a ruleset.
+ * It can be applied to a dependency tree which creates a converted tree.
+ * The transducer does not operate directly on trees, but rather on ConversionStates,
+ * which store information about the base tree and the frontier as well.
+ * Also, a lot of relevant code is in the Rule class.
  */
 public class Transducer {
 
@@ -42,6 +46,10 @@ public class Transducer {
     /**
      * Calculate the next conversion state after this one.
      * Returns null if no rule can be applied.
+     *
+     * The next state is calculated by trying each of the rules in the rulset in order and
+     * testing each rule on each frontier node in the current ConversionState.
+     * If at some point no rule matches, null is returned, as no next step can be calculated.
      */
     public ConversionState step(ConversionState current) {
         logger.info("State: " + current.toString());

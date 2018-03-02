@@ -8,11 +8,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by felix on 18/01/17.
+ * A binding from variables in rule trees to actual nodes in the tree that the rule is matched upon.
  */
 public class Binding {
     public Map<String, Node> singles = new HashMap<>();
     public Map<String, List<Node>> catchalls = new HashMap<>();
+    // the mapping of deprels is a special mechanism to not only match nodes but also dependency relations.
+    // A rule can contain a '$depRel' to match a dependency relation and this '$depRel' can then be used on
+    // the right-hand side of the rule as well.
     public Map<String, String> depRels = new HashMap<>();
     public List<Node> nodesAboveFrontier = new ArrayList<>();
 

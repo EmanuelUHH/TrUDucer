@@ -9,7 +9,7 @@ import java.util.Stack;
 import java.util.stream.Collectors;
 
 /**
- * Created by felix on 18/01/17.
+ * Creates a binding between the left-hand side tree of a rule and a part of a dependency tree.
  */
 public class Matcher {
 

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by felix on 07/02/17.
+ * A node in the tree on the right-hand side of a rule.
  */
 public class ReplacementNode {
 

@@ -56,6 +56,12 @@ public class Rule {
         return null;
     }
 
+    /**
+     * Creates a name for a node with the given string in it.
+     * Used for the automated creation of matching nodes when parts of the rule are inferred.
+     * @param desiredName  The name that is desired for the node.
+     * @return  The desiredName or an indexed version of this name.
+     */
     private String getName(String desiredName) {
         List<String> usedNames = matchTree.getUsedNames();
         if (!usedNames.contains(desiredName))
@@ -69,8 +75,15 @@ public class Rule {
         return newName;
     }
 
+    /**
+     * A method to infer missing catchAll variables on nodes on the left-hand side of the rule and
+     * put them in the right place on the right-hand side.
+     * @param sn  a StructNode is either a MatchingNode or a FrontierNode, any kind of node from the left-hand side of the rule.
+     * @param root  the replacementTree.
+     */
     private void addMissingRest(StructNode sn, ReplacementNode root) {
         if (sn instanceof MatchingNode) {
+            // Rests on common nodes is just catched and attached in the same place on the right-hand side.
             MatchingNode mn = (MatchingNode) sn;
             if (mn.getCatchallVar() == null) {
                 String catchallName = getName("r");
@@ -78,6 +91,8 @@ public class Rule {
                 getNode(root, mn.getName()).addCatchAllVar(catchallName);
             }
         } else if (sn instanceof FrontierNode){
+            // Rests on frontier nodes is catched and attached to the parent of the frontier node, on the right-hand side.
+            // The frontier node is gone on the right-hand side.
             if (sn.getCatchallVar() == null) {
                 String catchallname = getName("fr");
                 sn.setCatchallVar(catchallname);
@@ -127,15 +142,13 @@ public class Rule {
         addMissingRest(matchTree.root, replacementTree);
     }
 
+
     /**
-     * Tests applicability, first based on matching the tree structure and then
-     * optionally with groovy code.
-     * If the rule is applicable it is applied and the new frontier nodes are returned.
-     * Converts tree structure, changes depRel labels and updates the frontier
-     * modifies the conversion state in place
-     * @param frontierNode  The frontier node on which to test and apply the rule.
-     *                      If the rule is applied this node needs to be removed from the frontier.
-     * @return the frontier additions.
+     * Applies this rule to a conversion state and creates a new conversion state,
+     * containing the new tree after the rule was applied.
+     * @param currentState  The conversion state to apply the rule to.
+     * @param frontierNode  The index of the frontier node to apply the rule to.
+     * @return  converted state or null if conversion not possible.
      */
     ConversionState apply(ConversionState currentState, int frontierNode) {
         // original reinbekommen
@@ -159,10 +172,12 @@ public class Rule {
             Binding bindingNew = Matcher.getBinding(matchTree.frontierNode, fn2);
             assert bindingNew != null; // can't be null if bindingCurrent != null
                                        // otherwise deepCopy is broken
+            // *** restructuring part ***
             // attach all the nodes in the binding to their new parents
             setHeads(bindingNew, replacementTree);
+            // update frontier according to the replacementTree.
+            // Also sets dependency relations!  Method should probably be renamed ...
             List<DepTreeFrontierNode> frontierAdditions = getFrontierAdditions(bindingNew);
-
             result.getFrontier().remove(frontierNode);
             result.getFrontier().addAll(frontierAdditions);
             // TODO merge neighboring frontier nodes

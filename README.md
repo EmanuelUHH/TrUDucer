@@ -11,6 +11,14 @@ For in depth information take a look
 at [the accompanying website](https://nats.gitlab.io/truducer)
 and the accompanying paper [to be published].
 
+## Features
+
+- Convert individual trees 
+- Convert a treebank given as a directory
+- Visualize a conversion process of a tree
+
+- Compare trees to test precision and check coverage on converted trees
+
 ## Usage
 
 Dependency Trees in the CoNLL file format are converted with a a

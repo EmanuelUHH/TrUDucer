@@ -8,6 +8,7 @@ import java.util.List;
 /**
  * A Frontier Node in the actual dependency tree.
  * the node is only a pseudo node, as it is not actually inserted into the tree.
+ * The FrontierNode sits between the parent and the children.
  */
 public class DepTreeFrontierNode {
 
@@ -28,6 +29,12 @@ public class DepTreeFrontierNode {
     public void addChild(Node child) {
         assert child.getParent().get().equals(parent);
         children.add(child);
+    }
+
+    public void addChildren(List<Node> children) {
+        for (Node child : children) {
+            this.addChild(child);
+        }
     }
 
     public List<Node> getChildren() {

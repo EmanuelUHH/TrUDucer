@@ -49,6 +49,42 @@ public class ConversionState {
     }
 
     /**
+     * Merges frontier nodes that have the same parent.  Two nodes are replaced with a single node,
+     * combining the children of the two seperate nodes.
+     * This is necessary for certain rule matches and also makes sense intuitively.
+     * This method should be called after the frontier is modified.
+     */
+    public void mergeNeighboringFrontierNodes() {
+        List<DepTreeFrontierNode> newFrontier = new ArrayList<>(frontier);
+
+        boolean frontierChanged = true;
+
+        while (frontierChanged) {
+            frontierChanged = false;
+            List<DepTreeFrontierNode> frontierCopy = new ArrayList<>(frontier);
+            for (DepTreeFrontierNode fn : frontierCopy) {
+                for (DepTreeFrontierNode fn2 : frontierCopy) {
+                    if (fn.equals(fn2)) {
+                        continue;
+                    }
+                    if (fn.getParent().equals(fn2.getParent())) {
+                        DepTreeFrontierNode newNode = new DepTreeFrontierNode(fn.getChildren());
+                        newNode.addChildren(fn2.getChildren());
+                        frontier.remove(fn);
+                        frontier.remove(fn2);
+                        frontier.add(newNode);
+                        frontierChanged = true;
+                        break;
+                    }
+                }
+                if (frontierChanged)
+                    break;
+            }
+        }
+
+    }
+
+    /**
      * Conversion is finished if there are no more frontier nodes.
      */
     public boolean finished() {

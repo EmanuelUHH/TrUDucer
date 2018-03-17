@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import static nats.truducer.TestUtils.stringToParser;
 import static nats.truducer.TestUtils.stringToTree;
+import static nats.truducer.TestUtils.getNode;
 
 /**
  * Created by felix on 30/01/17.
@@ -153,10 +154,6 @@ public class TransducerTest {
             "# comment\n" +
             "n1:SUBJ(?ns) -> n1:nsubj(?ns);";
 
-
-    private Node getNode(Root tree, int id) {
-        return tree.getDescendants().stream().filter(n -> n.getOrd() == id).findFirst().get();
-    }
 
     @Test
     public void testTransducer1() {

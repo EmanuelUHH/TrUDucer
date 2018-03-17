@@ -1,6 +1,7 @@
 package nats.truducer;
 
 import cz.ufal.udapi.core.Document;
+import cz.ufal.udapi.core.Node;
 import cz.ufal.udapi.core.Root;
 import cz.ufal.udapi.core.io.impl.CoNLLUReader;
 import nats.truducer.io.ruleparsing.TransducerLexer;
@@ -26,5 +27,9 @@ public class TestUtils {
     public static Root stringToTree(String s) {
         Document d = new CoNLLUReader(new StringReader(s)).readDocument();
         return d.getBundles().get(0).getTrees().get(0);
+    }
+
+    public static Node getNode(Root tree, int id) {
+        return tree.getDescendants().stream().filter(n -> n.getOrd() == id).findFirst().get();
     }
 }

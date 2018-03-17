@@ -180,8 +180,7 @@ public class Rule {
             List<DepTreeFrontierNode> frontierAdditions = getFrontierAdditions(bindingNew);
             result.getFrontier().remove(frontierNode);
             result.getFrontier().addAll(frontierAdditions);
-            // TODO merge neighboring frontier nodes
-            // If two frontier nodes have the same parent, they should be merged.
+            result.mergeNeighboringFrontierNodes();
 
             if (groovyScript != null) {
                 groovy.lang.Binding scriptContext = new groovy.lang.Binding();

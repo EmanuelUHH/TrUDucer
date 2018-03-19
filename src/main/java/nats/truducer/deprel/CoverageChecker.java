@@ -5,18 +5,21 @@ import cz.ufal.udapi.core.Root;
 
 import java.util.*;
 
+import static nats.truducer.deprel.TreeUtils.getById;
+
 /**
- * Created by felix on 23/02/17.
+ * Aggregates statistics about tree converted nodes.
  */
 public class CoverageChecker {
 
-    private final List<Node> punct = new ArrayList<>();
-    private final List<Node> blockers = new ArrayList<>();
     private final Map<String, Integer> blockersIndividual = new HashMap<>();
-    private final List<Node> indirectlyAffected = new ArrayList<>();
     private final Map<String, Integer> indirectlyIndividual = new HashMap<>();
-    private final List<Node> converted = new ArrayList<>();
     private final Map<String, Integer> convertedIndividual = new HashMap<>();
+
+    private int punctuationNodes = 0;
+    private int blockerNodes = 0;
+    private int indirectlyAffectedNodes = 0;
+    private int convertedNodes = 0;
 
 
     public CoverageChecker() {
@@ -24,9 +27,22 @@ public class CoverageChecker {
     }
 
 
-    public void check(Root original, Root generated) {
-        for (Node n : generated.getNode().getChildren()) {
-            checkNode(n, original);
+    public void checkTree(Root original, Root generated) {
+        TreeConversionStats treeStats = new TreeConversionStats(original, generated);
+        treeStats.check();
+        punctuationNodes += treeStats.getPunctuationNodes().size();
+        blockerNodes += treeStats.getBlockerNodes().size();
+        indirectlyAffectedNodes += treeStats.getIndirectlyNotConvertedNodes().size();
+        convertedNodes += treeStats.getConvertedNodes().size();
+
+        for (Node blockerNode : treeStats.getBlockerNodes()) {
+            incOrInit(blockersIndividual, getById(original, blockerNode.getOrd()).getDeprel());
+        }
+        for (Node iaNode : treeStats.getIndirectlyNotConvertedNodes()) {
+            incOrInit(indirectlyIndividual, getById(original, iaNode.getOrd()).getDeprel());
+        }
+        for (Node convNode : treeStats.getConvertedNodes()) {
+            incOrInit(convertedIndividual, getById(original, convNode.getOrd()).getDeprel());
         }
     }
 
@@ -38,52 +54,28 @@ public class CoverageChecker {
         }
     }
 
-    private static Node getById(Root tree, int id) {
-        return tree.getDescendants().stream().filter(n -> n.getOrd() == id).findFirst().get();
+    public int getTotalPunctuationCount() {
+        return punctuationNodes;
     }
 
-    private void checkNode(Node node, Root original) {
-        if (node.getDeprel().equals("ROOT")) {
-            punct.add(node);
-        } else if (node.getDeprel().equals(getById(original, node.getOrd()).getDeprel())) {
-            blockers.add(node);
-            incOrInit(blockersIndividual, getById(original, node.getOrd()).getDeprel());
-            for (Node n : node.getDescendants()) {
-                indirectlyAffected.add(n);
-                incOrInit(indirectlyIndividual, getById(original, n.getOrd()).getDeprel());
-            }
-        } else {
-            converted.add(node);
-            incOrInit(convertedIndividual, getById(original, node.getOrd()).getDeprel());
-            for (Node n : node.getChildren()) {
-                checkNode(n, original);
-            }
-        }
+    public int getTotalBlockerCount() {
+        return blockerNodes;
     }
 
-
-    public List<Node> getPunctuation() {
-        return punct;
+    public int getTotalIndirectlyNotConvertedCount() {
+        return indirectlyAffectedNodes;
     }
 
-    public List<Node> getBlockers() {
-        return blockers;
+    public int getTotalConvertedCount() {
+        return convertedNodes;
     }
 
     public Map<String, Integer> getBlockersIndividual() {
         return blockersIndividual;
     }
 
-    public List<Node> getIndirectlyAffected() {
-        return indirectlyAffected;
-    }
-
     public Map<String, Integer> getIndirectlyIndividual() {
         return indirectlyIndividual;
-    }
-
-    public List<Node> getConverted() {
-        return converted;
     }
 
     public Map<String, Integer> getConvertedIndividual() {
@@ -105,9 +97,9 @@ public class CoverageChecker {
 
     public String getTableAsString() {
         int totalTokens = 0;
-        totalTokens += getConverted().size();
-        totalTokens += getBlockers().size();
-        totalTokens += getIndirectlyAffected().size();
+        totalTokens += getTotalConvertedCount();
+        totalTokens += getTotalBlockerCount();
+        totalTokens += getTotalIndirectlyNotConvertedCount();
 
         StringBuilder sb = new StringBuilder();
         sb.append("DepRel    total  conv block  rest\n");
@@ -128,12 +120,13 @@ public class CoverageChecker {
         return sb.toString();
     }
 
+    /**
+     * Returns a string containing percentage values for the blocker deprels.
+     * For each deprel that causes a conversion block, the share is given that it has
+     * on the total conversion blocks, i.e. APP 0.59, meaning that in 59% of the
+     * blocks, the APP relation is the cause.
+     */
     public String getBlockerStatsAsString() {
-        Map<String, Integer> blockerDeprels = new HashMap<>();
-        for (Node n : blockers) {
-            incOrInit(blockerDeprels, n.getDeprel());
-        }
-
         class Tuple {
             String depRel;
             int count;
@@ -144,8 +137,8 @@ public class CoverageChecker {
         }
 
         List<Tuple> vals = new ArrayList<Tuple>();
-        for (String key : blockerDeprels.keySet()) {
-            vals.add(new Tuple(key, blockerDeprels.get(key)));
+        for (String key : blockersIndividual.keySet()) {
+            vals.add(new Tuple(key, blockersIndividual.get(key)));
         }
 
         Collections.sort(vals, new Comparator<Tuple>() {
@@ -160,7 +153,7 @@ public class CoverageChecker {
 
         StringBuilder sb = new StringBuilder();
         for (Tuple t : vals) {
-            sb.append(String.format("%1$9s %2$6.4f\n", t.depRel, ((double)t.count)/((double)blockers.size())));
+            sb.append(String.format("%1$9s %2$6.4f\n", t.depRel, ((double)t.count)/((double)getTotalBlockerCount())));
         }
 
         return sb.toString();

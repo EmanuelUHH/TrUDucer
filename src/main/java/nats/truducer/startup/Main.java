@@ -8,19 +8,16 @@ import nats.truducer.data.Transducer;
 import nats.truducer.deprel.CoverageChecker;
 import nats.truducer.deprel.PrecisionStats;
 import nats.truducer.deprel.TreeComparator;
-import nats.truducer.gui.MainWindow;
 import nats.truducer.gui.MainWindowController;
 import nats.truducer.io.ruleparsing.TransducerLexer;
 import nats.truducer.io.ruleparsing.TransducerParser;
 import net.sourceforge.argparse4j.ArgumentParsers;
-import net.sourceforge.argparse4j.impl.type.StringArgumentType;
 import net.sourceforge.argparse4j.inf.*;
 import org.antlr.v4.runtime.ANTLRFileStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import cz.ufal.udapi.core.impl.DefaultDocument;
 import org.apache.log4j.Logger;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -240,13 +237,13 @@ public class Main {
         for (File file : files) {
             Root r = fileToTree(file);
             Root orig = fileToTree(new File(origDir + "/" + file.getName()));
-            cc.check(orig, r);
+            cc.checkTree(orig, r);
         }
 
-        int correctNodes = cc.getConverted().size();
-        int puncuationNodes = cc.getPunctuation().size();
-        int blockers = cc.getBlockers().size();
-        int indirectly = cc.getIndirectlyAffected().size();
+        int correctNodes = cc.getTotalConvertedCount();
+        int puncuationNodes = cc.getTotalPunctuationCount();
+        int blockers = cc.getTotalBlockerCount();
+        int indirectly = cc.getTotalIndirectlyNotConvertedCount();
 
         logger.info(String.format("%d nodes converted correctly.", correctNodes));
         logger.info(String.format("%d nodes punctuation.", puncuationNodes));

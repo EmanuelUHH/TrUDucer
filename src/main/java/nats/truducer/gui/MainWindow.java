@@ -91,6 +91,8 @@ public class MainWindow {
         if (depTree != null) {
             depTree.setZoomFactor(Math.pow(2.0, (((double) zoomSlider.getValue()) / 4.0)));
             depTree.redraw();
+            // size changed, set it again in the scrollPane to update
+            scrollPane.setViewportView(depTree.getNodesCanvas());
         }
 
         depTree.highlight(depTree.getNode(0));

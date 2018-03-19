@@ -63,4 +63,10 @@ public class TreeConversionStats {
     public List<Node> getPunctuationNodes() {
         return punctuationNodes;
     }
+
+    public boolean isTreeFullyConverted() {
+        boolean noBlockers = getBlockerNodes().size() == 0;
+        boolean noIndirectlyNotConverted = getIndirectlyNotConvertedNodes().size() == 0;
+        return noBlockers && noIndirectlyNotConverted;
+    }
 }

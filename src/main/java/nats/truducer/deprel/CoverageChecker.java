@@ -21,6 +21,9 @@ public class CoverageChecker {
     private int indirectlyAffectedNodes = 0;
     private int convertedNodes = 0;
 
+    private int convertedTreeCount = 0;
+    private int totalTreeCount = 0;
+
 
     public CoverageChecker() {
 
@@ -44,6 +47,10 @@ public class CoverageChecker {
         for (Node convNode : treeStats.getConvertedNodes()) {
             incOrInit(convertedIndividual, getById(original, convNode.getOrd()).getDeprel());
         }
+
+        totalTreeCount++;
+        if (treeStats.isTreeFullyConverted())
+            convertedTreeCount++;
     }
 
     private static void incOrInit(Map<String, Integer> map, String key) {
@@ -68,6 +75,14 @@ public class CoverageChecker {
 
     public int getTotalConvertedCount() {
         return convertedNodes;
+    }
+
+    public int getTotalTreeCount() {
+        return totalTreeCount;
+    }
+
+    public int getConvertedTreeCount() {
+        return convertedTreeCount;
     }
 
     public Map<String, Integer> getBlockersIndividual() {

@@ -245,6 +245,9 @@ public class Main {
         int blockers = cc.getTotalBlockerCount();
         int indirectly = cc.getTotalIndirectlyNotConvertedCount();
 
+        logger.info(String.format("%d trees total", cc.getTotalTreeCount()));
+        logger.info(String.format("%d fully converted Trees", cc.getConvertedTreeCount()));
+
         logger.info(String.format("%d nodes converted correctly.", correctNodes));
         logger.info(String.format("%d nodes punctuation.", puncuationNodes));
         logger.info(String.format("%d nodes blockers.", blockers));

@@ -1,6 +1,9 @@
 package nats.truducer.gui;
 
+import cz.ufal.udapi.core.Document;
 import cz.ufal.udapi.core.Root;
+import cz.ufal.udapi.core.impl.DefaultDocument;
+import cz.ufal.udapi.core.io.impl.CoNLLUWriter;
 import nats.truducer.data.ConversionState;
 import nats.truducer.data.Rule;
 import nats.truducer.data.Transducer;
@@ -9,6 +12,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.StringWriter;
 import java.util.Stack;
 
 /**
@@ -96,6 +101,17 @@ public class MainWindowController implements ChangeListener, ActionListener {
         } else if (actionEvent.getSource().equals(mainWindow.prevButton)) {
             currentlyDisplayedTree -= 1;
             afterTreeOrTransducerUpdate();
+        } else if (actionEvent.getSource().equals(mainWindow.menuItem)) {
+            Root tree = convStack.get(currentlyDisplayedTree).getTree();
+
+            Document outDoc = new DefaultDocument();
+            outDoc.createBundle().addTree(tree);
+            StringWriter sw = new StringWriter();
+            BufferedWriter bw = new BufferedWriter(sw);
+
+            new CoNLLUWriter().writeDocument(outDoc, bw);
+
+            new TextBoxPopup(mainWindow.frame, sw.toString());
         }
     }
 }

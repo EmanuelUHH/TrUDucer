@@ -42,13 +42,24 @@ convrule[Map<String, List<String>> expansions] returns [ Rule rule ] :
      $rule = new Rule($mt.tree, $rt.tree, groovyCode, _localctx.getText());
  };
 
+edgeLabel returns [ String label ] :
+  (dr=IDENTIFIER|dr=Q_IDENTIFIER) ( ':' extension=IDENTIFIER )?
+  { $label = $dr.getText();
+    if ($extension != null)
+      $label += ":" + $extension.getText();
+  };
+
 replacementNode returns [ ReplacementNode tree ] :
- id=IDENTIFIER ( ':' (dr=IDENTIFIER|dr=Q_IDENTIFIER))?
+ id=IDENTIFIER
  { ReplacementNode rn = new ReplacementNode();
    $tree = rn;
    rn.setName($id.getText());
-   if ($dr != null) { rn.setDepRel($dr.getText()); }
  }
+ ( ':' dr=edgeLabel
+   {
+     rn.setDepRel($dr.label);
+   }
+ )?
  '(' ( ( rt=replacementNode { rn.addChild($rt.tree);
                               $rt.tree.setParent(rn); }
        | '?' ca=IDENTIFIER { rn.addCatchAllVar($ca.getText()); } )
@@ -62,11 +73,12 @@ matchTree[Map<String, List<String>> expansions] returns [ Tree tree ] :
  ;
 
 node[Map<String, List<String>> expansions] returns [ Tree tree ] :
- ( id=IDENTIFIER ( ':' (dr=IDENTIFIER|dr=Q_IDENTIFIER))? ( '.' pos=IDENTIFIER )?
- | id=IDENTIFIER ( '.' pos=IDENTIFIER )? ( ':' (dr=IDENTIFIER|dr=Q_IDENTIFIER))? )
+ { String elabel = null; }
+ ( id=IDENTIFIER ( ':' dr=edgeLabel {elabel = $dr.label;})? ( '.' pos=IDENTIFIER )?
+ | id=IDENTIFIER ( '.' pos=IDENTIFIER )? ( ':' dr=edgeLabel {elabel = $dr.label;})? )
  { MatchingNode mn = new MatchingNode($id.getText(),
                                       $pos != null ? $pos.getText() : null,
-                                      $dr != null ? $dr.getText() : null,
+									  elabel,
                                       expansions);
    $tree = new Tree(mn); }
  '(' ( ( dt=matchTree[expansions] { mn.addChild($dt.tree.root);

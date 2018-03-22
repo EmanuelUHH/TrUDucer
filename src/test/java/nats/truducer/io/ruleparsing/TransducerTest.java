@@ -25,6 +25,17 @@ public class TransducerTest {
         Assert.assertEquals(mn.getDepRel(), "DEP");
     }
 
+	@Test
+    public void testExtendedLabels() {
+        TransducerParser parser = stringToParser("n1.POS:DEP:EXTENSION()");
+
+        TransducerParser.MatchTreeContext tree = parser.matchTree(new HashMap<>());
+        MatchingNode mn = (MatchingNode) tree.tree.root;
+        Assert.assertEquals("n1", mn.getName());
+        Assert.assertEquals("POS", mn.getPosTag());
+        Assert.assertEquals("DEP:EXTENSION",mn.getDepRel());
+    }
+
     @Test
     public void testTreeParsing() {
         TransducerParser parser = stringToParser("n1(n2(), n3())");

@@ -24,12 +24,12 @@
 # If you need to re-use a dependency label, you can match the label of
 # a node with $var like this:
 # x:$label(....) -> y:$label
-# y will have the label x had befor the translation.  this usually
+# y will have the label x had before the translation.  this usually
 # only makes sense for already translated nodes.
 
 # You can add groovy code to restrict matching based on the current
 # tree and the resulting tree:
-# p(\{n:APP()\}) -> p(n:compound()) :- {n.getOrd() < p.getOrd()};
+# p({n:APP()}) -> p(n:compound()) :- {n.getOrd() < p.getOrd()};
 
 # will only be applied if n is left of p. The variables are
 # cz.ufal.udapi.core.Node Objects.  you can access the elements from

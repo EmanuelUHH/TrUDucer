@@ -6,6 +6,7 @@ import cz.ufal.udapi.core.Root;
 import cz.ufal.udapi.core.io.impl.CoNLLUReader;
 import cz.ufal.udapi.core.io.impl.CoNLLUWriter;
 import nats.truducer.data.Transducer;
+import nats.truducer.data.Tree;
 import nats.truducer.deprel.CoverageChecker;
 import nats.truducer.deprel.PrecisionStats;
 import nats.truducer.deprel.TreeComparator;
@@ -17,6 +18,7 @@ import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.action.StoreTrueArgumentAction;
 import net.sourceforge.argparse4j.inf.*;
 import org.antlr.v4.runtime.ANTLRFileStream;
+import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import cz.ufal.udapi.core.impl.DefaultDocument;
 import org.apache.log4j.Logger;
@@ -26,6 +28,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -102,6 +105,13 @@ public class Main {
                 .help("only list trees that are not fully converted");
         listTrees.addArgument("-b", "--blockers").action(new StoreTrueArgumentAction())
                 .help("list the blockers in the trees");
+
+        Subparser searchTrees = subparsers.addParser("search")
+                .help("Search for trees by giving a substructure of the tree.");
+        searchTrees.addArgument("dir")
+                .help("Directory containing the tree files to search.");
+        searchTrees.addArgument("expr")
+                .help("The search expression given in the TrUDucer rule syntax.");
 
 
         Namespace ns = null;
@@ -313,6 +323,17 @@ public class Main {
         }
     }
 
+    private static void searchMain(Namespace ns) {
+        String querry = "";
+        ANTLRInputStream input = new ANTLRInputStream(querry);
+        TransducerLexer lexer = new TransducerLexer(input);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        TransducerParser parser = new TransducerParser(tokens);
+        TransducerParser.MatchTreeContext context =  parser.matchTree(new HashMap<>());
+
+        Tree tree = context.tree;
+    }
+
     private static void showTreeMain(Namespace ns) throws IOException {
         String conllFilePath = ns.getString("input_file");
         String transducerPath = ns.getString("transducer_file");
@@ -326,7 +347,7 @@ public class Main {
 
         MainWindowController controller = new MainWindowController();
         controller.initWindow();
-        controller.setTree(tree);
+        controller.setTree(tree, transducer.getNodeClassifier());
         controller.setTransducer(transducer);
     }
 

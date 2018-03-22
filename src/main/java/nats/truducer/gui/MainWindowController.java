@@ -5,6 +5,7 @@ import cz.ufal.udapi.core.Root;
 import cz.ufal.udapi.core.impl.DefaultDocument;
 import cz.ufal.udapi.core.io.impl.CoNLLUWriter;
 import nats.truducer.data.ConversionState;
+import nats.truducer.data.NodeClassifier;
 import nats.truducer.data.Rule;
 import nats.truducer.data.Transducer;
 
@@ -42,11 +43,11 @@ public class MainWindowController implements ChangeListener, ActionListener {
         }
     }
 
-    public void setTree(Root tree) {
+    public void setTree(Root tree, NodeClassifier nodeClassifier) {
         convStack = new Stack<>();
         currentlyDisplayedTree = -1;
         if (tree != null) {
-            convStack.push(new ConversionState(tree));
+            convStack.push(new ConversionState(tree, nodeClassifier));
             currentlyDisplayedTree = 0;
         }
         afterTreeOrTransducerUpdate();

@@ -5,6 +5,7 @@ import cz.ufal.udapi.core.Root;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * The ConversionState encodes information about a tree that is currently being converted.
@@ -23,15 +24,32 @@ public class ConversionState {
     }
 
     /**
-     * Creates an initial Conversion state from the given tree, with a single frontier node,
-     * right above the root of the tree.
+     * Creates a conversion state with the given tree.
+     * The classifier is used to find the frontier in the tree.
+     * Usually initially there is only a single frontier node at the top of the tree.
      */
-    public ConversionState(Root tree) {
+    public ConversionState(Root tree, NodeClassifier classifier) {
         this.tree = tree;
-        DepTreeFrontierNode dtfn = new DepTreeFrontierNode(tree.getNode().getChildren());
-        // tree.getNode().getChildren() returns the first 'real' node, as getChildren() returns the
-        // technical root.
-        this.frontier.add(dtfn);
+        findFrontier(tree.getNode(), classifier);
+    }
+
+    /**
+     * Traverses the tree from the top and determines the location of the frontier by
+     * looking for the first unconverted nodes, using the definition given in the nodeclassifier.
+     */
+    private void findFrontier(Node node, NodeClassifier classifier) {
+        List<Node> children = node.getChildren();
+        List<Node> unconvertedNodes = children.stream().filter(classifier::isSourceNode).collect(Collectors.toList());
+        List<Node> convertedNodes = children.stream().filter(classifier::isTargetNode).collect(Collectors.toList());
+        if (!unconvertedNodes.isEmpty()) {
+            DepTreeFrontierNode dtfn = new DepTreeFrontierNode(unconvertedNodes);
+            frontier.add(dtfn);
+        }
+        if (!convertedNodes.isEmpty()) {
+            for (Node convertedNode : convertedNodes) {
+                findFrontier(convertedNode, classifier);
+            }
+        }
     }
 
     /**

@@ -18,6 +18,7 @@ public class Transducer {
     private static final Logger logger = Logger.getLogger(Transducer.class);
 
     public final List<Rule> rules;
+    public final NodeClassifier nClassifier = new NodeClassifier();
 
     public Transducer(List<Rule> rules) {
         this.rules = rules;
@@ -27,7 +28,7 @@ public class Transducer {
     public Root applyTo(Root root) {
         logger.info(String.format("Transducer applied to %s", root));
         Stack<ConversionState> states = new Stack<>();
-        ConversionState init = new ConversionState(root);
+        ConversionState init = new ConversionState(root, nClassifier);
         states.push(init);
 
         while(!states.peek().finished()) {
@@ -41,6 +42,14 @@ public class Transducer {
         }
 
         return states.peek().getTree();
+    }
+
+    /**
+     * Get the node classifier for the transducer.
+     * The node classifier implicitly contains the set of source and target nodes.
+     */
+    public NodeClassifier getNodeClassifier() {
+        return nClassifier;
     }
 
     /**

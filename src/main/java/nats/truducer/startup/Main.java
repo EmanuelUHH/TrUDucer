@@ -1,6 +1,7 @@
 package nats.truducer.startup;
 
 import cz.ufal.udapi.core.Document;
+import cz.ufal.udapi.core.Node;
 import cz.ufal.udapi.core.Root;
 import cz.ufal.udapi.core.io.impl.CoNLLUReader;
 import cz.ufal.udapi.core.io.impl.CoNLLUWriter;
@@ -8,10 +9,12 @@ import nats.truducer.data.Transducer;
 import nats.truducer.deprel.CoverageChecker;
 import nats.truducer.deprel.PrecisionStats;
 import nats.truducer.deprel.TreeComparator;
+import nats.truducer.deprel.TreeConversionStats;
 import nats.truducer.gui.MainWindowController;
 import nats.truducer.io.ruleparsing.TransducerLexer;
 import nats.truducer.io.ruleparsing.TransducerParser;
 import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.impl.action.StoreTrueArgumentAction;
 import net.sourceforge.argparse4j.inf.*;
 import org.antlr.v4.runtime.ANTLRFileStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -24,6 +27,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by felix on 12/01/17.
@@ -88,6 +92,18 @@ public class Main {
                 .nargs("?")
                 .help("The rule file.");
 
+        Subparser listTrees = subparsers.addParser("list")
+                .help("List trees and subsets of trees from the treebank.");
+        listTrees.addArgument("src_dir")
+                .help("The directory containing the original conll files.");
+        listTrees.addArgument("gen_dir")
+                .help("The directory containing the generated conll files.");
+        listTrees.addArgument("-i", "--incomplete").action(new StoreTrueArgumentAction())
+                .help("only list trees that are not fully converted");
+        listTrees.addArgument("-b", "--blockers").action(new StoreTrueArgumentAction())
+                .help("list the blockers in the trees");
+
+
         Namespace ns = null;
         try {
             ns = parser.parseArgs(args);
@@ -107,6 +123,9 @@ public class Main {
                     break;
                 case "show":
                     showTreeMain(ns);
+                    break;
+                case "list":
+                    listMain(ns);
             }
         } catch (ArgumentParserException e) {
             parser.handleError(e);
@@ -266,6 +285,32 @@ public class Main {
 
         logger.info("\n" + cc.getTableAsString());
         logger.info("\n" + cc.getBlockerStatsAsString());
+    }
+
+    private static void listMain(Namespace ns) {
+        String srcDir = ns.getString("src_dir");
+        String genDir = ns.getString("gen_dir");
+        boolean onlyIncomplete = ns.getBoolean("incomplete");
+        boolean showBlockers = ns.getBoolean("blockers");
+
+        File[] files = new File(genDir).listFiles();
+        Arrays.sort(files);
+
+        for (File file : files) {
+            Root gen = fileToTree(file);
+            Root orig = fileToTree(new File(srcDir + "/" + file.getName()));
+            TreeConversionStats tcStats = new TreeConversionStats(orig, gen);
+            tcStats.check();
+            if (!onlyIncomplete || !tcStats.isTreeFullyConverted()) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(file.getName());
+                if (showBlockers) {
+                    String blockers = tcStats.getBlockerNodes().stream().map(Node::getDeprel).collect(Collectors.joining(", "));
+                    sb.append(" " + blockers);
+                }
+                System.out.println(sb.toString());
+            }
+        }
     }
 
     private static void showTreeMain(Namespace ns) throws IOException {

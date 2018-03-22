@@ -31,25 +31,25 @@ public class CoverageChecker {
 
 
     public void checkTree(Root original, Root generated) {
-        TreeConversionStats treeStats = new TreeConversionStats(original, generated);
-        treeStats.check();
-        punctuationNodes += treeStats.getPunctuationNodes().size();
-        blockerNodes += treeStats.getBlockerNodes().size();
-        indirectlyAffectedNodes += treeStats.getIndirectlyNotConvertedNodes().size();
-        convertedNodes += treeStats.getConvertedNodes().size();
+        TreeConversionStats tStats = new TreeConversionStats(original, generated);
+        tStats.check();
+        punctuationNodes += tStats.getPunctuationNodes().size();
+        blockerNodes += tStats.getBlockerNodes().size();
+        indirectlyAffectedNodes += tStats.getIndirectlyNotConvertedNodes().size();
+        convertedNodes += tStats.getConvertedNodes().size();
 
-        for (Node blockerNode : treeStats.getBlockerNodes()) {
+        for (Node blockerNode : tStats.getBlockerNodes()) {
             incOrInit(blockersIndividual, getById(original, blockerNode.getOrd()).getDeprel());
         }
-        for (Node iaNode : treeStats.getIndirectlyNotConvertedNodes()) {
+        for (Node iaNode : tStats.getIndirectlyNotConvertedNodes()) {
             incOrInit(indirectlyIndividual, getById(original, iaNode.getOrd()).getDeprel());
         }
-        for (Node convNode : treeStats.getConvertedNodes()) {
+        for (Node convNode : tStats.getConvertedNodes()) {
             incOrInit(convertedIndividual, getById(original, convNode.getOrd()).getDeprel());
         }
 
         totalTreeCount++;
-        if (treeStats.isTreeFullyConverted())
+        if (tStats.isTreeFullyConverted())
             convertedTreeCount++;
     }
 

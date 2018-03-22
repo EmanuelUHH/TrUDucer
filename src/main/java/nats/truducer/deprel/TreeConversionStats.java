@@ -48,6 +48,14 @@ public class TreeConversionStats {
         }
     }
 
+    public Root getOriginalTree() {
+        return originalTree;
+    }
+
+    public Root getGeneratedTree() {
+        return generatedTree;
+    }
+
     public List<Node> getConvertedNodes() {
         return convertedNodes;
     }

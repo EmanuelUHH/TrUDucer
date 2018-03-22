@@ -22,7 +22,7 @@ public class MainWindow {
     public final JButton prevButton;
     public final JButton nextButton;
     public DepTree<SimpleParse, SimpleWord> depTree = null;
-    private JScrollPane scrollPane;
+    private final JScrollPane scrollPane;
 
     public final JMenuItem menuItem;
 
@@ -83,7 +83,6 @@ public class MainWindow {
         nextButton.addActionListener(controller);
         bottomPane.add(nextButton);
         deptreeViewPane.add(bottomPane, BorderLayout.SOUTH);
-
 
         //Display the window.
         frame.pack();

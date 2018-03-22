@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
  */
 public class Rule {
 
-    private Tree matchTree;
+    private final Tree matchTree;
 
     private ReplacementNode replacementTree;
 

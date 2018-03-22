@@ -5,8 +5,7 @@ import cz.ufal.udapi.core.Node;
 import cz.ufal.udapi.core.Root;
 import cz.ufal.udapi.core.io.impl.CoNLLUReader;
 import cz.ufal.udapi.core.io.impl.CoNLLUWriter;
-import nats.truducer.data.Transducer;
-import nats.truducer.data.Tree;
+import nats.truducer.data.*;
 import nats.truducer.deprel.CoverageChecker;
 import nats.truducer.deprel.PrecisionStats;
 import nats.truducer.deprel.TreeComparator;
@@ -136,6 +135,9 @@ public class Main {
                     break;
                 case "list":
                     listMain(ns);
+                    break;
+                case "search":
+                    searchMain(ns);
             }
         } catch (ArgumentParserException e) {
             parser.handleError(e);
@@ -324,14 +326,57 @@ public class Main {
     }
 
     private static void searchMain(Namespace ns) {
-        String querry = "";
-        ANTLRInputStream input = new ANTLRInputStream(querry);
+        String dir = ns.getString("dir");
+        String searchExpression = ns.getString("expr");
+
+        // parse search expression
+        ANTLRInputStream input = new ANTLRInputStream(searchExpression);
         TransducerLexer lexer = new TransducerLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         TransducerParser parser = new TransducerParser(tokens);
         TransducerParser.MatchTreeContext context =  parser.matchTree(new HashMap<>());
+        Tree queryTree = context.tree;
+        //infer missing structure by creating a dummy rule ... really dirty hack, sorry!
+        Rule dummyRule = new Rule(queryTree, generateDummyReplacementNode(queryTree), null, "");
 
-        Tree tree = context.tree;
+        File[] files = new File(dir).listFiles();
+        Arrays.sort(files);
+
+        NodeClassifier defaultNodeClassifier = new NodeClassifier();
+
+        for (File file : files) {
+            Root tree = fileToTree(file);
+            ConversionState convState = new ConversionState(tree, defaultNodeClassifier);
+
+            for (DepTreeFrontierNode frontierNode : convState.getFrontier()) {
+                Binding match = Matcher.getBinding(queryTree.frontierNode, frontierNode);
+                if (match != null) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(file.getName());
+                    sb.append(":");
+                    for (String key : queryTree.getUsedNames()) {
+                        Node n = match.singles.get(key);
+                        if (n != null) {
+                            sb.append("[" + key + ":" + n.getDeprel() + "]");
+                        }
+                    }
+                    System.out.println(sb.toString());
+                }
+            }
+        }
+    }
+
+    private static ReplacementNode generateDummyReplacementNode(Tree matchTree) {
+        List<String> usedNames = matchTree.getUsedNames();
+        ReplacementNode dummyParent = new ReplacementNode();
+        dummyParent.setName(usedNames.stream().collect(Collectors.joining()));
+        for (String name : usedNames) {
+            ReplacementNode rNode = new ReplacementNode();
+            rNode.setName(name);
+            rNode.setParent(dummyParent);
+            dummyParent.addChild(rNode);
+        }
+        return dummyParent;
     }
 
     private static void showTreeMain(Namespace ns) throws IOException {

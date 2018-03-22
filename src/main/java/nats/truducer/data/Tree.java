@@ -24,7 +24,8 @@ public class Tree {
     }
 
     private void collectUsedNames(StructNode node, List<String> names) {
-        names.add(node.getCatchallVar());
+        if (node.getCatchallVar() != null)
+            names.add(node.getCatchallVar());
         if (node instanceof MatchingNode)
             names.add(((MatchingNode)node).getName());
         for (StructNode sn : node.getChildren())

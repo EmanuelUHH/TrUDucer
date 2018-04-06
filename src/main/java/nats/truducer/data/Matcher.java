@@ -95,7 +95,6 @@ public class Matcher {
 
         Stack<SearchState2> states = new Stack<>();
         states.push(initialState);
-        Outer:
         while (result == null && !states.isEmpty()) {
             SearchState2 currentState = states.peek();
             while (!currentState.steps.isEmpty()) {
@@ -105,10 +104,11 @@ public class Matcher {
                     SearchState2 newState = currentState.generateNext(progression);
                     if (newState.isComplete()) {
                         result = newState;
-                        break Outer;
+                        break;
                     }
                     else {
                         states.push(newState);
+                        currentState = newState;
                         break;
                     }
                 }

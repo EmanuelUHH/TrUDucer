@@ -9,7 +9,7 @@ to a new target annotation schema.
 
 For in depth information take a look
 at [the accompanying website](https://nats.gitlab.io/truducer)
-and the accompanying paper [to be published].
+and [the accompanying paper](http://nbn-resolving.de/urn:nbn:de:gbv:18-228-7-2303).
 
 ## Features
 

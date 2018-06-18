@@ -7,11 +7,21 @@
     <groupId>nats</groupId>
     <artifactId>TrUDucer</artifactId>
     <version>1.0-SNAPSHOT</version>
-
+	<repositories>
+	  <repository>
+		<id>jitpack.io</id>
+		<url>https://jitpack.io</url>
+	  </repository>
+	</repositories>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
+	  	<dependency>
+	      <groupId>com.github.udapi</groupId>
+	      <artifactId>udapi-java</artifactId>
+	      <version>63e602e65e3f496955aa3732f82f426e16f53e25</version>
+		</dependency>
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
@@ -26,11 +36,6 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>3.8.1</version>
-        </dependency>
-        <dependency>
-            <groupId>udapi</groupId>
-            <artifactId>udapi</artifactId>
-            <version>1.0</version>
         </dependency>
         <dependency>
             <groupId>net.sourceforge.argparse4j</groupId>

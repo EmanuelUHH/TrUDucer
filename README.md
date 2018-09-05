@@ -58,6 +58,11 @@ optional arguments:
   -h, --help             show this help message and exit
 ```
 
+## Data
+
+We use TrUDucer to convert the Hamburg Dependency Treebank.  As of
+now, [a set of manually converted sentences](https://gitlab.com/nats/TrUDucer_experiment_data)
+is available which we used for developing and evaluating the example rule file.
 
 ## License
 

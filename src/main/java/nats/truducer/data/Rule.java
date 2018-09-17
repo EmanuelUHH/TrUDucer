@@ -168,6 +168,13 @@ public class Rule {
         if (bindingCurrent != null) {
             result = currentState.deepCopy();
             result.setAppliedRule(this);
+
+            // ** inserted by Maximilian
+            // rememerbs the changed nodes (e. g. to be highlighted by the tree viewer)
+            result.setChangedNodes(new ArrayList<Node>() {{
+                addAll(bindingCurrent.singles.values());
+            }});
+
             DepTreeFrontierNode fn2 = result.getFrontier().get(frontierNode);
             Binding bindingNew = Matcher.getBinding(matchTree.frontierNode, fn2);
             assert bindingNew != null; // can't be null if bindingCurrent != null
@@ -181,6 +188,8 @@ public class Rule {
             result.getFrontier().remove(frontierNode);
             result.getFrontier().addAll(frontierAdditions);
             result.mergeNeighboringFrontierNodes();
+
+
 
             if (groovyScript != null) {
                 groovy.lang.Binding scriptContext = new groovy.lang.Binding();

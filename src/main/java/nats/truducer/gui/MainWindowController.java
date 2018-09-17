@@ -1,6 +1,7 @@
 package nats.truducer.gui;
 
 import cz.ufal.udapi.core.Document;
+import cz.ufal.udapi.core.Node;
 import cz.ufal.udapi.core.Root;
 import cz.ufal.udapi.core.impl.DefaultDocument;
 import cz.ufal.udapi.core.io.impl.CoNLLUWriter;
@@ -15,6 +16,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Stack;
 
 /**
@@ -72,7 +74,26 @@ public class MainWindowController implements ChangeListener, ActionListener {
             mainWindow.ruleTextField.setText("No tree given.");
             return;
         }
-        mainWindow.setTree(convStack.get(currentlyDisplayedTree).getTree());
+        ConversionState currentlyShown = convStack.get(currentlyDisplayedTree);
+        mainWindow.setTree(currentlyShown.getTree());
+
+        // ** inserted by Maximilian
+        // highlights changed nodes in the tree viewer
+        mainWindow.highlightNodes(new ArrayList<Integer>(){{
+            if(currentlyShown.getChangedNodes() != null && currentlyShown.getChangedNodes().size() > 0)
+                for(Node n: currentlyShown.getChangedNodes()) {
+                    if(n != null && n.getOrd() > 0)
+                        add(n.getOrd() - 1);
+                }
+        }});
+
+        // ** inserted by Maximilian
+        // show applied rule in the viewer
+        if(currentlyShown.getAppliedRule() != null) {
+            mainWindow.ruleTextField.setText(currentlyShown.getAppliedRule().toString());
+        } else {
+            mainWindow.ruleTextField.setText("-");
+        }
 
         if (transducer == null) {
             mainWindow.ruleTextField.setText("No transducer given.");

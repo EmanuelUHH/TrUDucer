@@ -9,6 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by felix on 22/02/17.
@@ -62,6 +63,12 @@ public class MainWindow {
         // Scroll Pane containing the actual tree
         scrollPane = new JScrollPane();
         depTree = new DepTree<>();
+
+        // * edited by Maximilian Wendt
+        // set highlight color for visualization of changed nodes
+        depTree.setHighlightColor(Color.MAGENTA);
+
+
         scrollPane.setViewportView(depTree.getNodesCanvas());
         int fontSize = depTree.getFont().getSize();
         scrollPane.getHorizontalScrollBar()
@@ -98,10 +105,28 @@ public class MainWindow {
         if (tree != null) {
             p = UdapiToDeptreeviz.getParse(tree);
         }
+
+        // ** edited by Maximilian
+        // reset markers
+        depTree.resetMarkedNodes();
+
         depTree.setDecParse(p);
         depTree.draw(p);
 
         scrollPane.setViewportView(depTree.getNodesCanvas());  //wichtig
+    }
+
+    /**
+     * highlight nodes with given indices (starting with 0, not like the Ord index in ConversionState nodes!!!)
+     * @param indices List of indices specifying the nodes, which should be highlighted
+     */
+    public void highlightNodes(List<Integer> indices) {
+        if(indices != null) {
+            for(Integer i: indices) {
+                depTree.getNode(i).setMarkedLevels(new ArrayList<String>(){{add("SYN");}});
+                depTree.highlight(depTree.getNode(i));
+            }
+        }
     }
 
     public void setZoomLevel() {

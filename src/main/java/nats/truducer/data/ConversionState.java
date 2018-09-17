@@ -19,6 +19,10 @@ public class ConversionState {
     private List<DepTreeFrontierNode> frontier = new ArrayList<>();
     private Rule appliedRule = null;
 
+    // ** changed by Maximilian
+    // here the nodes that where changed are stored
+    private List<Node> changedNodes;
+
     private ConversionState() {
 
     }
@@ -138,5 +142,13 @@ public class ConversionState {
      */
     public Rule getAppliedRule() {
         return this.appliedRule;
+    }
+
+    public void setChangedNodes(List<Node> changedNodes) {
+        this.changedNodes = changedNodes;
+    }
+
+    public List<Node> getChangedNodes() {
+        return this.changedNodes;
     }
 }

@@ -41,7 +41,7 @@
 
 expansion predicatePos = [VAFIN, VVFIN, VVPP, VVINF, VVIZU, ADJD, ADJA];
 expansion advclIndicator = [OBJA, OBJD, AUX];
-
+expansion noun = [NN, NE];
 
 ########## S-PRED invert 
 parent:$x({n:PRED(n2:PN(), ?predr), ?fr}, ?r) -> n2:$x(n:case(), parent:cop(), ?predr, ?r, ?fr);
@@ -122,13 +122,12 @@ n:OBJA() -> n:obj();
 n:OBJD() -> n:obj();
 
 ########## APP -> flat / compound / appos
-parent.NE({n.NE:APP(?r)}) -> parent(n:flat(), ?r); # 100003, 100011 #### gilt nicht bei 100014
-# subsequent dependents should be attached to the head of the flat relation
-parent.NE({n.NN:APP(?r)}) -> parent(n:appos(?r)); # 100011
-parent.NN({n.NN:APP(?r)}) -> parent(n:compound(?r)); # 100008
-parent({n.NN:APP()}) -> parent(n:compound()); # 100008 parent 
-parent.NN:$x({n.NE:APP(?r)}, ?r2) -> n:$x(parent:compound(), ?r, ?r2); # 100014, 100017
-pp(p.PIS:$x({n.PIS:APP()}, ?r)) -> pp(n:$x(p:det(), ?r));  # 100037
+parent.noun({n.NE:APP(?r)}) -> parent(n:flat(), ?r); # 100003, 100011, 100014
+parent.noun({n.NN:APP(?r)}) -> parent(n:appos(?r)); # 100011
+# Die compound-Beziehung taucht im Deutschen nur bei Komposita auf, die im HDT in der Regel als einzelne Token annotiert sind. 
+# Sie sollte überarbeitet und wieder eingebunden werden, sobald die Token korrekt in syntaktische Einheiten aufgeteilt werden.
+pp(p.PIS:$x({n.PIS:APP()}, ?r)) -> pp(n:$x(p:det(), ?r));  # 100037 Weitere Beispiele für PIS?
+
 
 ########## ATTR -> nummod / amod
 n.CARD:ATTR() -> n:nummod();

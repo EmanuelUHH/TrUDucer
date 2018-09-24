@@ -24,9 +24,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import cz.ufal.udapi.core.impl.DefaultDocument;
 import org.apache.log4j.Logger;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -184,7 +182,7 @@ public class Main {
         Document docOut = new DefaultDocument();
         docOut.createBundle().addTree(newRoot);
 
-        new CoNLLUWriter().writeDocument(docOut, Paths.get(outPath));
+        writeDoc(docOut, Paths.get(outPath).toFile());
     }
 
     private static void convertDirMain(Namespace ns) throws Exception {
@@ -246,7 +244,47 @@ public class Main {
         Document outDoc = new DefaultDocument();
         outDoc.createBundle().addTree(transduced);
 
+        writeDoc(outDoc, outFile);
+    }
+
+    /**
+     * The CoNNLUWriter seems to not care about ordering of the words/nodes.
+     * The CoNNLUReader very much does so!
+     * As long as the reader is not fixed, we need to be careful about ordering
+     * our output. This should help...
+     *
+     * @param outDoc
+     * @param outFile
+     */
+    private static void writeDoc(Document outDoc, File outFile) {
         new CoNLLUWriter().writeDocument(outDoc, outFile.toPath());
+
+        try {
+            BufferedReader r = new BufferedReader(new FileReader(outFile));
+            String s;
+            List<String> strings = new ArrayList<>();
+            while ((s = r.readLine()) != null) {
+                strings.add(s);
+            }
+            r.close();
+            strings.sort((a, b) -> {
+                if(a.startsWith("#") || b.length() < 1)
+                    return Integer.compare(1, 0);
+                if(b.startsWith("#") || a.length() < 1)
+                    return Integer.compare(0, 1);
+                int first = Integer.parseInt(a.split("\t")[0]);
+                int second = Integer.parseInt(b.split("\t")[0]);
+                return Integer.compare(first, second);
+            });
+
+            FileWriter w = new FileWriter(outFile);
+
+            // weiss nicht, ob das die schoenste Implementation in Java ist :)
+            w.write(strings.stream().reduce("", (a, b) -> a + "\n" + b));
+            w.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void testMain(Namespace ns) throws Exception {

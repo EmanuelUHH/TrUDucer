@@ -4,6 +4,7 @@ import cz.ufal.udapi.core.Node;
 import cz.ufal.udapi.core.Root;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,9 +20,9 @@ public class ConversionState {
     private List<DepTreeFrontierNode> frontier = new ArrayList<>();
     private Rule appliedRule = null;
 
-    // ** changed by Maximilian
+    // ** added by Maximilian
     // here the nodes that where changed are stored
-    private List<Node> changedNodes;
+    private Collection<Node> changedNodes;
 
     private ConversionState() {
 
@@ -144,11 +145,11 @@ public class ConversionState {
         return this.appliedRule;
     }
 
-    public void setChangedNodes(List<Node> changedNodes) {
+    public void setChangedNodes(Collection<Node> changedNodes) {
         this.changedNodes = changedNodes;
     }
 
-    public List<Node> getChangedNodes() {
+    public Collection<Node> getChangedNodes() {
         return this.changedNodes;
     }
 }

@@ -3,6 +3,7 @@ package nats.truducer.data;
 import cz.ufal.udapi.core.Node;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
+import nats.truducer.gui.ConvGUIController;
 import nats.truducer.interactive.InteractiveConversion;
 
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ public class Rule {
 
     private Script groovyScript = null;
     private InteractiveConversion interactiveConversion = null;
+    private Map<String, List<String>> groovyDictionary = null;
 
     private final String origString;
 
@@ -43,6 +45,10 @@ public class Rule {
 
     public void setInteractiveConversion(InteractiveConversion ic) {
         this.interactiveConversion = ic;
+    }
+
+    public void setGroovyDictionary(HashMap<String, List<String>> dict) {
+        this.groovyDictionary = dict;
     }
 
     private ReplacementNode getNode(ReplacementNode root, String name) {
@@ -170,10 +176,8 @@ public class Rule {
             result.setAppliedRule(this);
 
             // ** inserted by Maximilian
-            // rememerbs the changed nodes (e. g. to be highlighted by the tree viewer)
-            result.setChangedNodes(new ArrayList<Node>() {{
-                addAll(bindingCurrent.singles.values());
-            }});
+            // remembers the changed nodes (e. g. to be highlighted by the tree viewer)
+            result.setChangedNodes(bindingCurrent.singles.values());
 
             DepTreeFrontierNode fn2 = result.getFrontier().get(frontierNode);
             Binding bindingNew = Matcher.getBinding(matchTree.frontierNode, fn2);
@@ -195,6 +199,14 @@ public class Rule {
                 groovy.lang.Binding scriptContext = new groovy.lang.Binding();
                 groovyScript.setBinding(scriptContext);
                 scriptContext.setProperty("interactive", interactiveConversion);
+                scriptContext.setProperty("dict", groovyDictionary);
+
+                // ** added by Maximilian
+                // if the interactive Converter is a graphical interface, it needs to know the current
+                // conversionState to be able to visualize it.
+                if(interactiveConversion instanceof ConvGUIController) {
+                    ((ConvGUIController) interactiveConversion).setCurrentlyShown(result);
+                }
                 addProperties(scriptContext, bindingCurrent, "");  // previous nodes without prefix
                 addProperties(scriptContext, bindingNew, "_");     // new nodes prefixed with "_"
                 Object scriptReturnVal = groovyScript.run();

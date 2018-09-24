@@ -10,6 +10,8 @@ import nats.truducer.deprel.CoverageChecker;
 import nats.truducer.deprel.PrecisionStats;
 import nats.truducer.deprel.TreeComparator;
 import nats.truducer.deprel.TreeConversionStats;
+import nats.truducer.exceptions.BlockedInteractionException;
+import nats.truducer.gui.ConvGUIController;
 import nats.truducer.gui.MainWindowController;
 import nats.truducer.io.ruleparsing.TransducerLexer;
 import nats.truducer.io.ruleparsing.TransducerParser;
@@ -26,6 +28,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -69,6 +72,15 @@ public class Main {
                 .help("The directory containing the CoNLL files to be converted.");
         convall.addArgument("output_dir")
                 .help("The directory where the converted files should be generated.");
+
+        // ** added by Maximilian
+        // to declare whether the user wants a graphical view of the tree for interactive
+        // conversion or the terminal view
+        // TODO implement both views and actually choose between them
+        convall.addArgument("-g", "--gui")
+                .setDefault("false")
+                .choices("true", "false")
+                .help("use graphical or terminal-based representation of graphs");
 
         Subparser test = subparsers.addParser("compare")
                 .help("Compare two directories of CoNLL files.");
@@ -153,8 +165,21 @@ public class Main {
 
         Transducer t = pathToTransducer(transducerPath);
 
+        // ** added by Maximilian
+        // creates a viewer for interactive Conversions and sets it for all the rules
+        // TODO set conversion dynamically for each rule
+        //  -> there probably won't be just one interactive conversion function that fits
+        //     all cases
+        ConvGUIController interactiveWindow = new ConvGUIController();
+        interactiveWindow.initWindow();
+
+        interactiveWindow.setTransducer(t);
+        t.rules.forEach(r -> r.setInteractiveConversion(interactiveWindow));
+
         Root root = pathToTree(inPath);
         Root newRoot = t.applyTo(root);
+
+        interactiveWindow.close();
 
         Document docOut = new DefaultDocument();
         docOut.createBundle().addTree(newRoot);
@@ -171,18 +196,57 @@ public class Main {
 
         Transducer t = pathToTransducer(transducerPath);
 
+        // ** added by Maximilian
+        // same as in convertMain!
+        ConvGUIController interactiveWindow = new ConvGUIController();
+        interactiveWindow.initWindow();
+
+        interactiveWindow.setTransducer(t);
+        t.rules.forEach(r -> r.setInteractiveConversion(interactiveWindow));
+
         File[] files = new File(inDir).listFiles();
         Arrays.sort(files);
 
-        for (File file : files) {
-            logger.info(String.format("Testing file %s", file));
-            Root orig = fileToTree(file);
-            Root transduced = t.applyTo(orig);
-            Document outDoc = new DefaultDocument();
-            outDoc.createBundle().addTree(transduced);
+        // interactive conversions block the conversion process.
+        // better is be to convert in two phases, first all conversions
+        // that don't need user input, and only after that convert those that
+        // use interactive conversions. Then the user is free to move while
+        // the machine computes for most of the time.
 
-            new CoNLLUWriter().writeDocument(outDoc, new File(outDir, file.getName()).toPath());
+        // these are all the files requiring interaction, those will be
+        // converted in a second pass, after all other conversions are done.
+        List<File> interactiveFiles = new ArrayList<>();
+
+        // ** changed by Maximilian
+        // now first converts all non interactive files, catches those that
+        // require interactions and does those in a second run
+        interactiveWindow.setInteractiveAllowed(false);
+        for (File file : files) {
+            try {
+                convertFile(t, file, new File(outDir, file.getName()));
+            } catch (BlockedInteractionException e) {
+                interactiveFiles.add(file);
+                logger.info("conversion requires interaction, doing this in second run!");
+            }
         }
+
+        // now convert all files which require interaction with user
+        interactiveWindow.setInteractiveAllowed(true);
+        for (File file : interactiveFiles) {
+            convertFile(t, file, new File(outDir, file.getName()));
+        }
+
+        interactiveWindow.close();
+    }
+
+    private static void convertFile(Transducer t, File inFile, File outFile) {
+        logger.info(String.format("Testing file %s", inFile));
+        Root orig = fileToTree(inFile);
+        Root transduced = t.applyTo(orig);
+        Document outDoc = new DefaultDocument();
+        outDoc.createBundle().addTree(transduced);
+
+        new CoNLLUWriter().writeDocument(outDoc, outFile.toPath());
     }
 
     private static void testMain(Namespace ns) throws Exception {

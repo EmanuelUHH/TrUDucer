@@ -41,7 +41,7 @@
 
 expansion predicatePos = [VAFIN, VVFIN, VVPP, VVINF, VVIZU, ADJD, ADJA];
 expansion advclIndicator = [OBJA, OBJD, AUX];
-expansion noun = [NN, NE];
+expansion noun = [NN, NE, FM, CARD]; #FM, CARD überwachen
 
 ########## S-PRED invert 
 parent:$x({n:PRED(n2:PN(), ?predr), ?fr}, ?r) -> n2:$x(n:case(), parent:cop(), ?predr, ?r, ?fr);
@@ -122,11 +122,12 @@ n:OBJA() -> n:obj();
 n:OBJD() -> n:obj();
 
 ########## APP -> flat / compound / appos
-parent.noun({n.NE:APP(?r)}) -> parent(n:flat(), ?r); # 100003, 100011, 100014
 parent.noun({n.NN:APP(?r)}) -> parent(n:appos(?r)); # 100011
+parent.noun({n.PDS:APP(?r)}) -> parent(n:appos(?r)); # 100713
+parent.noun({n.noun:APP(?r)}) -> parent(n:flat(), ?r); # 100003, 100011, 100014, 100031 Aneinanderreihung fremdsprachlicher Begriffe
 # Die compound-Beziehung taucht im Deutschen nur bei Komposita auf, die im HDT in der Regel als einzelne Token annotiert sind. 
 # Sie sollte überarbeitet und wieder eingebunden werden, sobald die Token korrekt in syntaktische Einheiten aufgeteilt werden.
-pp(p.PIS:$x({n.PIS:APP()}, ?r)) -> pp(n:$x(p:det(), ?r));  # 100037 Weitere Beispiele für PIS?
+pp(p.PIS:$x({n.PIS:APP()}, ?r)) -> pp(n:$x(p:det(), ?r));  # 100037
 
 
 ########## ATTR -> nummod / amod

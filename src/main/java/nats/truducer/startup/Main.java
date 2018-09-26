@@ -24,9 +24,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import cz.ufal.udapi.core.impl.DefaultDocument;
 import org.apache.log4j.Logger;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -247,6 +245,31 @@ public class Main {
         outDoc.createBundle().addTree(transduced);
 
         new CoNLLUWriter().writeDocument(outDoc, outFile.toPath());
+
+        try {
+            BufferedReader r = new BufferedReader(new FileReader(outFile));
+            List<String> rows = new ArrayList<>();
+            String s = r.readLine();
+            while(s != null) {
+                rows.add(s);
+                s = r.readLine();
+            }
+            rows.sort((a, b) -> {
+                if(a.startsWith("#") || b.length() < 1)
+                    return Integer.compare(1, 0);
+                if(b.startsWith("#") || a.length() < 1)
+                    return Integer.compare(0, 1);
+                int first = Integer.parseInt(a.split("\t")[0]);
+                int second = Integer.parseInt(b.split("\t")[0]);
+                return Integer.compare(first, second);
+            });
+            r.close();
+            FileWriter w = new FileWriter(outFile);
+            w.write(rows.stream().reduce("", (a, b) -> a + System.lineSeparator() + b));
+            w.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void testMain(Namespace ns) throws Exception {

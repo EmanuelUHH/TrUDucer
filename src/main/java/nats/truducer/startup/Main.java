@@ -165,9 +165,6 @@ public class Main {
 
         // ** added by Maximilian
         // creates a viewer for interactive Conversions and sets it for all the rules
-        // TODO set conversion dynamically for each rule
-        //  -> there probably won't be just one interactive conversion function that fits
-        //     all cases
         ConvGUIController interactiveWindow = new ConvGUIController();
         interactiveWindow.initWindow();
 
@@ -246,6 +243,9 @@ public class Main {
 
         new CoNLLUWriter().writeDocument(outDoc, outFile.toPath());
 
+
+        // the ConLLUWriter writes the tree in an unordered way, while the ConLLUWriter cannot parse
+        // an unordered tree... quick fix is to order the lines in the output file afterwards...
         try {
             BufferedReader r = new BufferedReader(new FileReader(outFile));
             List<String> rows = new ArrayList<>();
@@ -479,6 +479,7 @@ public class Main {
 
         MainWindowController controller = new MainWindowController();
         controller.initWindow();
+        controller.setTitle(new File(conllFilePath).getCanonicalPath() + " - TrUDucer");
         controller.setTree(tree, transducer.getNodeClassifier());
         controller.setTransducer(transducer);
     }

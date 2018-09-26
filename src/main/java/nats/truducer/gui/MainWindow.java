@@ -20,8 +20,10 @@ public class MainWindow {
     public final JFrame frame;
     public final JSlider zoomSlider;
     public final JTextField ruleTextField;
+    public final JButton firstButton;
     public final JButton prevButton;
     public final JButton nextButton;
+    public final JButton lastButton;
     public DepTree<SimpleParse, SimpleWord> depTree = null;
     private final JScrollPane scrollPane;
 
@@ -83,12 +85,18 @@ public class MainWindow {
         ruleTextField = new JTextField();
         ruleTextField.setEditable(false);
         bottomPane.add(ruleTextField);
+        firstButton = new JButton("<<");
+        firstButton.addActionListener(controller);
+        bottomPane.add(firstButton);
         prevButton = new JButton("<");
         prevButton.addActionListener(controller);
         bottomPane.add(prevButton);
         nextButton = new JButton(">");
         nextButton.addActionListener(controller);
         bottomPane.add(nextButton);
+        lastButton = new JButton(">>");
+        lastButton.addActionListener(controller);
+        bottomPane.add(lastButton);
         deptreeViewPane.add(bottomPane, BorderLayout.SOUTH);
 
         //Display the window.

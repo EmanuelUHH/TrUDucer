@@ -45,6 +45,10 @@ public class MainWindowController implements ChangeListener, ActionListener {
         }
     }
 
+    public void setTitle(String title) {
+        mainWindow.frame.setTitle(title);
+    }
+
     public void setTree(Root tree, NodeClassifier nodeClassifier) {
         convStack = new Stack<>();
         currentlyDisplayedTree = -1;
@@ -61,11 +65,12 @@ public class MainWindowController implements ChangeListener, ActionListener {
             // set the handler for interactive conversion triggered by the groovy code
             r.setInteractiveConversion(interactiveGUI);
         }
-
+        mainWindow.nextButton.setEnabled(true);
         afterTreeOrTransducerUpdate();
     }
 
     private void afterTreeOrTransducerUpdate() {
+        boolean wasNextButtonEnabled = mainWindow.nextButton.isEnabled();
         mainWindow.prevButton.setEnabled(false);
         mainWindow.nextButton.setEnabled(false);
         mainWindow.ruleTextField.setText("");
@@ -99,10 +104,12 @@ public class MainWindowController implements ChangeListener, ActionListener {
             mainWindow.ruleTextField.setText("No transducer given.");
             return;
         }
-        mainWindow.nextButton.setEnabled(true);
+        mainWindow.nextButton.setEnabled(wasNextButtonEnabled);
         if (currentlyDisplayedTree > 0) {
             mainWindow.prevButton.setEnabled(true);
         }
+        mainWindow.firstButton.setEnabled(mainWindow.prevButton.isEnabled());
+        mainWindow.lastButton.setEnabled(mainWindow.nextButton.isEnabled());
     }
 
     @Override
@@ -114,7 +121,7 @@ public class MainWindowController implements ChangeListener, ActionListener {
                     convStack.push(next);
                     currentlyDisplayedTree += 1;
                 } else {
-                    // TODO somehow disable the button, conversion is not finished but cannot continue
+                    mainWindow.nextButton.setEnabled(false);
                 }
             } else {
                 currentlyDisplayedTree += 1;
@@ -123,6 +130,21 @@ public class MainWindowController implements ChangeListener, ActionListener {
         } else if (actionEvent.getSource().equals(mainWindow.prevButton)) {
             currentlyDisplayedTree -= 1;
             afterTreeOrTransducerUpdate();
+            mainWindow.nextButton.setEnabled(true);
+        } else if (actionEvent.getSource().equals(mainWindow.lastButton)) {
+            currentlyDisplayedTree = convStack.size() - 1; // skip to last already calculated step
+            ConversionState next = transducer.step(convStack.peek());
+            while (next != null) {
+                convStack.push(next);
+                currentlyDisplayedTree += 1;
+                next = transducer.step(next);
+            }
+            mainWindow.nextButton.setEnabled(false);
+            afterTreeOrTransducerUpdate();
+        } else if (actionEvent.getSource().equals(mainWindow.firstButton)) {
+            currentlyDisplayedTree = 0;
+            afterTreeOrTransducerUpdate();
+            mainWindow.nextButton.setEnabled(true);
         } else if (actionEvent.getSource().equals(mainWindow.menuItem)) {
             Root tree = convStack.get(currentlyDisplayedTree).getTree();
 

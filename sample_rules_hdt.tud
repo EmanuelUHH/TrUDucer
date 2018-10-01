@@ -77,7 +77,15 @@ n:S() -> n:root();
 # KOM-CJ flip
 p({n1:KON(n2:KON())}) -> p(n1:conj(), n2()); # 100104
 n1:KON(n2:CJ(?cjr), ?konr) -> n2:conj(n1:cc(), ?konr, ?cjr);
+p.KON:root({n.VMFIN:CJ()}) -> n:root(p:cc()); # 100209 Mit aber eingeleitete Hauptsätze.
 p.VVFIN({n.VVFIN:KON()}) -> p(n:parataxis()); # 100335  needs more verb forms
+# Formen von sein, haben und werden sind immer als VAFIN annotiert und werden deshalb nicht hiervon abgedeckt.
+# 100261 Komplizierte Konstruktion, Parent ist VAFIN. Wurde der Satz korrekt umgehangen?
+# n:KON() -> n:conj(); # Löst Einschubfehler wie z.B. bei 100129, übersetzt aber evtl. zu viel. 
+# Zuerst mit verbessertem Tool überprüfen, welche Fälle dadurch falsch übersetzt werden könnten.
+# KON sind inkonsistent annotiert, siehe z.B. Umgang mit PP-PN in 100129 und 100248. Mit groovy script umständlich, aber lösbar.
+# Ist 100323 correlative conjunction? http://universaldependencies.org/fi/dep/cc-preconj.html
+# KON müsste dann dort zu cc-preconj konvertiert werden.
 
 n1:KOM(n2:CJ(n3:PN(), ?r2), ?r1) -> n3:obl(n1:case(), n2:case(), ?r1, ?r2);  # 10007
 n1:KOM(n2:CJ(?cjr), ?komr) -> n2:conj(n1:cc(), ?komr, ?cjr);
@@ -100,7 +108,7 @@ n:PP(?r) -> n:advmod(?r); # if no PN dependent it is simply advmod (100009) davo
 ########## ADV advmod
 n1:ADV(n2:OBJA2(), ?r) -> n2:acl(n1:cop(), ?r);   # 100135
 n1:ADV(n2:OBJG(?n2r), ?n1r) -> n2:nmod(n1:case(), ?n2r, ?n1r);
-p({n:ADV(?r)}) -> p(n:advmod(), ?r);  # 29568
+p({n:ADV(?r)}) -> p(n:advmod(), ?r);  # 29568 # Evtl. falsch für Adverbialphrasen wie bei 100323.
 
 n:OBJA2() -> n:obj(); # 100335
 n:OBJG() -> n:obj(); # 100155

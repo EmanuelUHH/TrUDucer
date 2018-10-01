@@ -188,10 +188,6 @@ public class Rule {
             setHeads(bindingNew, replacementTree);
             // update frontier according to the replacementTree.
             // Also sets dependency relations!  Method should probably be renamed ...
-            List<DepTreeFrontierNode> frontierAdditions = getFrontierAdditions(bindingNew);
-            result.getFrontier().remove(frontierNode);
-            result.getFrontier().addAll(frontierAdditions);
-            result.mergeNeighboringFrontierNodes();
 
 
 
@@ -216,6 +212,15 @@ public class Rule {
                         result = null;
                 }
             }
+
+            if(result != null) {
+                List<DepTreeFrontierNode> frontierAdditions = getFrontierAdditions(bindingNew);
+                result.getFrontier().remove(frontierNode);
+                result.getFrontier().addAll(frontierAdditions);
+                result.mergeNeighboringFrontierNodes();
+            }
+
+
         }
         return result;
     }

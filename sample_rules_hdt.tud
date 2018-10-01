@@ -81,7 +81,23 @@ p.KON:root({n.VMFIN:CJ()}) -> n:root(p:cc()); # 100209 Mit aber eingeleitete Hau
 p.VVFIN({n.VVFIN:KON()}) -> p(n:parataxis()); # 100335  needs more verb forms
 # Formen von sein, haben und werden sind immer als VAFIN annotiert und werden deshalb nicht hiervon abgedeckt.
 # 100261 Komplizierte Konstruktion, Parent ist VAFIN. Wurde der Satz korrekt umgehangen?
-# n:KON() -> n:conj(); # Löst Einschubfehler wie z.B. bei 100129, übersetzt aber evtl. zu viel. 
+
+# 100129, KON-Ketten mit (längeren) Unterbrechungen
+p({n:KON(), ?r}) -> p(n:conj(), ?r) :- {
+    def currNode = _n;
+    currNode.deprel = "konj";
+    while(currNode.deprel != "KON") {
+        def children = currNode.children;
+        if(children == null || children.size() == 0 || children.size() > 1)
+            return false;
+        currNode = children.get(0);
+    }
+    currNode.setParent(_p);
+    _r.add(currNode);
+    return true;
+};
+
+# n:KON() -> n:conj(); # Löst Einschubfehler wie z.B. bei 100129, übersetzt aber evtl. zu viel.
 # Zuerst mit verbessertem Tool überprüfen, welche Fälle dadurch falsch übersetzt werden könnten.
 # KON sind inkonsistent annotiert, siehe z.B. Umgang mit PP-PN in 100129 und 100248. Mit groovy script umständlich, aber lösbar.
 # Ist 100323 correlative conjunction? http://universaldependencies.org/fi/dep/cc-preconj.html

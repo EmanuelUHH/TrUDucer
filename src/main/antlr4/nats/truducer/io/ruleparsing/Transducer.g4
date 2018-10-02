@@ -96,6 +96,7 @@ node[Map<String, List<String>> expansions] returns [ Tree tree ] :
                       $dt.tree.root.setParent(mn); }
        | '?' ca=IDENTIFIER { mn.setCatchallVar($ca.getText()); } ) )* )? ')' ;
 
+
 frontier[Map<String, List<String>> expansions] returns [ Tree tree ] :
   { FrontierNode fn = new FrontierNode();
     $tree = new Tree(fn);
@@ -116,18 +117,17 @@ frontier[Map<String, List<String>> expansions] returns [ Tree tree ] :
       )?
   '}' ;
 
+RULEBODY : ':-' ' '+ '{' (~('{'|'}')+? |'{' .+? '}')*? '}'
+ {
+             String groovyCode = getText();
+             groovyCode = groovyCode.substring(groovyCode.indexOf("{") + 1, groovyCode.length() - 1);
+             System.out.println(groovyCode);
+             setText(groovyCode);
+ };
+
 IDENTIFIER : ('a'..'z'|'A'..'Z')('a'..'z'|'A'..'Z'|'0'..'9')* ;
 
 Q_IDENTIFIER : '$' ('a'..'z'|'A'..'Z')('a'..'z'|'A'..'Z'|'0'..'9')*;
-
-RULEBODY : ':-' ' '+ '{' .*? '}'
- {
-             Pattern p = Pattern.compile(":-\\s*\\{(.*)\\}");
-             Matcher m = p.matcher(getText());
-             m.find();
-             String groovyCode = m.group(1);
-             setText(groovyCode);
- };
 
 COMMENT : '#' (~('\n'|'\r')* '\r'? '\n' {skip();});
 

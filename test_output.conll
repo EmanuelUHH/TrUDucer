@@ -1,0 +1,33 @@
+# sent_id = 0/und
+1	Nachdem	Nachdem	KOUS	KOUS	_	19	mark	_	_
+2	in	in	PREP	APPR	case=dat	5	case	_	_
+3	den	den	ART	ART	number=pl|case=dat	5	det	_	_
+4	letzten	NULL	ADJA	ADJA	number=pl|degree=superlative|flexion=weak_mixed	5	amod	_	_
+5	Tagen	Tag	N	NN	person=third|number=pl|case=dat|gender=masc	19	obl	_	_
+6	viele	viel	ART	PIDAT	person=third|number=pl|case=nom|degree=positive|flexion=strong	7	amod	_	_
+7	T-DSL-Nutzer	Nutzer	N	NN	person=third|number=pl|case=nom_gen_acc|gender=masc	19	nsubj	_	_
+8	aufgrund	aufgrund	PREP	APPR	case=gen	10	case	_	_
+9	fehlerhafter	fehlerhaft	ADJA	ADJA	number=sg|case=gen_dat|gender=fem|degree=positive|flexion=strong	10	amod	_	_
+10	Software	Software	N	NN	person=third|number=sg|gender=fem	19	obl	_	_
+11	der	der	ART	ART	number=pl|case=gen	12	det	_	_
+12	Einwahlrouter	Router	N	NN	person=third|number=pl|case=nom_gen_acc|gender=masc	10	nmod	_	_
+13	keinen	kein	ART	PIAT	person=third|number=sg|case=acc|gender=masc	14	det	_	_
+14	Zugang	Zugang	N	NN	person=third|number=sg|case=nom_dat_acc|gender=masc	19	obj	_	_
+15	zum	zum	PREP	APPRART	case=dat|gender=not_fem	16	case	_	_
+16	Highspeed-Netz	Netz	N	NN	person=third|number=sg|case=nom_dat_acc|gender=neut	14	nmod	_	_
+17	der	der	ART	ART	case=gen|gender=fem|number=sg	18	det	_	_
+18	Telekom	Telekom	N	NE	person=third|number=sg|gender=fem|subcat=Firma	16	nmod	_	_
+19	bekamen	bekommen	V	VVFIN	person=third|mood=indicative|tense=past|number=pl	30	advcl	_	_
+20	,	,	$,	$,	_	0	ROOT	_	_
+21	hat	haben	V	VAFIN	person=third|mood=indicative|tense=present|number=sg	30	aux	_	_
+22	die	die	ART	ART	case=nom|gender=fem|number=sg	24	det	_	_
+23	Bonner	Bonner	ADJA	ADJA	degree=positive	24	amod	_	_
+24	Telefongesellschaft	Gesellschaft	N	NN	person=third|number=sg|gender=fem	30	nsubj	_	_
+25	nun	nun	ADV	ADV	subcat=temporal	30	advmod	_	_
+26	den	den	ART	ART	case=acc|gender=masc|number=sg	28	det	_	_
+27	alten	alt	ADJA	ADJA	number=sg|case=acc|gender=masc|degree=positive	28	amod	_	_
+28	Zustand	Zustand	N	NN	person=third|number=sg|case=nom_dat_acc|gender=masc	30	obj	_	_
+29	wieder	wieder	ADV	ADV	subcat=temporal	30	advmod	_	_
+30	hergestellt	herstellen	V	VVPP	_	0	root	_	_
+31	.	.	$.	$.	_	0	ROOT	_	_
+

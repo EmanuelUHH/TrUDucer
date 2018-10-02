@@ -12,6 +12,7 @@ import nats.truducer.deprel.TreeComparator;
 import nats.truducer.deprel.TreeConversionStats;
 import nats.truducer.exceptions.BlockedInteractionException;
 import nats.truducer.gui.ConvGUIController;
+import nats.truducer.gui.ConvResultController;
 import nats.truducer.gui.MainWindowController;
 import nats.truducer.io.ruleparsing.TransducerLexer;
 import nats.truducer.io.ruleparsing.TransducerParser;
@@ -26,11 +27,11 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static nats.io.TreeReaderWriter.fileToTree;
+import static nats.io.TreeReaderWriter.treeToFile;
 
 /**
  * Created by felix on 12/01/17.
@@ -179,10 +180,7 @@ public class Main {
 
         interactiveWindow.close();
 
-        Document docOut = new DefaultDocument();
-        docOut.createBundle().addTree(newRoot);
-
-        writeDoc(docOut, Paths.get(outPath).toFile());
+        treeToFile(new File(outPath), newRoot);
     }
 
     private static void convertDirMain(Namespace ns) throws Exception {
@@ -241,50 +239,7 @@ public class Main {
         logger.info(String.format("Testing file %s", inFile));
         Root orig = fileToTree(inFile);
         Root transduced = t.applyTo(orig);
-        Document outDoc = new DefaultDocument();
-        outDoc.createBundle().addTree(transduced);
-
-        writeDoc(outDoc, outFile);
-    }
-
-    /**
-     * The CoNNLUWriter seems to not care about ordering of the words/nodes.
-     * The CoNNLUReader very much does so!
-     * As long as the reader is not fixed, we need to be careful about ordering
-     * our output. This should help...
-     *
-     * @param outDoc
-     * @param outFile
-     */
-    private static void writeDoc(Document outDoc, File outFile) {
-        new CoNLLUWriter().writeDocument(outDoc, outFile.toPath());
-
-        try {
-            BufferedReader r = new BufferedReader(new FileReader(outFile));
-            String s;
-            List<String> strings = new ArrayList<>();
-            while ((s = r.readLine()) != null) {
-                strings.add(s);
-            }
-            r.close();
-            strings.sort((a, b) -> {
-                if(a.startsWith("#") || b.length() < 1)
-                    return Integer.compare(1, 0);
-                if(b.startsWith("#") || a.length() < 1)
-                    return Integer.compare(0, 1);
-                int first = Integer.parseInt(a.split("\t")[0]);
-                int second = Integer.parseInt(b.split("\t")[0]);
-                return Integer.compare(first, second);
-            });
-
-            FileWriter w = new FileWriter(outFile);
-
-            // weiss nicht, ob das die schoenste Implementation in Java ist :)
-            w.write(strings.stream().reduce("", (a, b) -> a + "\n" + b));
-            w.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        treeToFile(outFile, transduced);
     }
 
     private static void testMain(Namespace ns) throws Exception {
@@ -366,11 +321,14 @@ public class Main {
         Arrays.sort(files);
 
         CoverageChecker cc = new CoverageChecker();
+        ConvResultController gui = new ConvResultController();
 
         for (File file : files) {
             Root r = fileToTree(file);
             Root orig = fileToTree(new File(origDir + "/" + file.getName()));
-            cc.checkTree(orig, r);
+            TreeConversionStats tStats = cc.checkTree(orig, r);
+
+            gui.add(file, new File(origDir + "/" + file.getName()), tStats);
         }
 
         int correctNodes = cc.getTotalConvertedCount();
@@ -399,6 +357,14 @@ public class Main {
 
         logger.info("\n" + cc.getTableAsString());
         logger.info("\n" + cc.getBlockerStatsAsString());
+
+        gui.setPercentage(blockersPercentage * 100d);
+        Map<String, Integer> blockersIndividual = cc.getBlockersIndividual();
+        for(String blocker: blockersIndividual.keySet()) {
+            gui.setPercentage(blocker, 100d * (double) blockersIndividual.get(blocker) / (double) blockers);
+        }
+
+        gui.initWindow();
     }
 
     private static void listMain(Namespace ns) {
@@ -494,6 +460,7 @@ public class Main {
 
         MainWindowController controller = new MainWindowController();
         controller.initWindow();
+        controller.setTitle(new File(conllFilePath).getCanonicalPath() + " - TrUDucer");
         controller.setTree(tree, transducer.getNodeClassifier());
         controller.setTransducer(transducer);
     }
@@ -506,13 +473,6 @@ public class Main {
 
         TransducerParser.TransducerContext tree = parser.transducer();
         return tree.t;
-    }
-
-    private static Root fileToTree(File file) {
-        Document doc = new CoNLLUReader(file).readDocument();
-        logger.debug(String.format("Bundles: %d", doc.getBundles().size()));
-        logger.debug(String.format("Trees: %d", doc.getBundles().get(0).getTrees().size()));
-        return doc.getBundles().get(0).getTrees().get(0);
     }
 
     private static Root pathToTree(String path) {

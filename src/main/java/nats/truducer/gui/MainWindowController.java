@@ -23,26 +23,14 @@ import java.util.Stack;
  * The class controlling the main window.
  * It creates the main window and is the listener for controls (buttons, sliders).
  */
-public class MainWindowController implements ChangeListener, ActionListener {
+public class MainWindowController implements ActionListener {
     private MainWindow mainWindow;
-    private InteractiveConversionGUI interactiveGUI;
-    private Stack<ConversionState> convStack = new Stack<>();
-    private int currentlyDisplayedTree = -1;
-    private Transducer transducer;
 
     public MainWindowController() {
     }
 
     public void initWindow() {
         mainWindow = new MainWindow(this);
-        interactiveGUI = new InteractiveConversionGUI(mainWindow.frame);
-    }
-
-    @Override
-    public void stateChanged(ChangeEvent changeEvent) {
-        if (changeEvent.getSource().equals(mainWindow.zoomSlider)) {
-            mainWindow.setZoomLevel();
-        }
     }
 
     public void setTitle(String title) {
@@ -50,112 +38,17 @@ public class MainWindowController implements ChangeListener, ActionListener {
     }
 
     public void setTree(Root tree, NodeClassifier nodeClassifier) {
-        convStack = new Stack<>();
-        currentlyDisplayedTree = -1;
-        if (tree != null) {
-            convStack.push(new ConversionState(tree, nodeClassifier));
-            currentlyDisplayedTree = 0;
-        }
-        afterTreeOrTransducerUpdate();
+        mainWindow.depTreeViewPane.setTree(tree, nodeClassifier);
     }
 
     public void setTransducer(Transducer transducer) {
-        this.transducer = transducer;
-        for (Rule r : this.transducer.rules) {
-            // set the handler for interactive conversion triggered by the groovy code
-            r.setInteractiveConversion(interactiveGUI);
-        }
-        mainWindow.nextButton.setEnabled(true);
-        afterTreeOrTransducerUpdate();
-    }
-
-    private void afterTreeOrTransducerUpdate() {
-        boolean wasNextButtonEnabled = mainWindow.nextButton.isEnabled();
-        mainWindow.prevButton.setEnabled(false);
-        mainWindow.nextButton.setEnabled(false);
-        mainWindow.ruleTextField.setText("");
-        mainWindow.setTree(null);
-        if (convStack.empty()) {
-            mainWindow.ruleTextField.setText("No tree given.");
-            return;
-        }
-        ConversionState currentlyShown = convStack.get(currentlyDisplayedTree);
-        mainWindow.setTree(currentlyShown.getTree());
-
-        // ** inserted by Maximilian
-        // highlights changed nodes in the tree viewer
-        mainWindow.highlightNodes(new ArrayList<Integer>(){{
-            if(currentlyShown.getChangedNodes() != null && currentlyShown.getChangedNodes().size() > 0)
-                for(Node n: currentlyShown.getChangedNodes()) {
-                    if(n != null && n.getOrd() > 0)
-                        add(n.getOrd() - 1);
-                }
-        }});
-
-        // ** inserted by Maximilian
-        // show applied rule in the viewer
-        if(currentlyShown.getAppliedRule() != null) {
-            mainWindow.ruleTextField.setText(currentlyShown.getAppliedRule().toString());
-        } else {
-            mainWindow.ruleTextField.setText("-");
-        }
-
-        if (transducer == null) {
-            mainWindow.ruleTextField.setText("No transducer given.");
-            return;
-        }
-        mainWindow.nextButton.setEnabled(wasNextButtonEnabled);
-        if (currentlyDisplayedTree > 0) {
-            mainWindow.prevButton.setEnabled(true);
-        }
-        mainWindow.firstButton.setEnabled(mainWindow.prevButton.isEnabled());
-        mainWindow.lastButton.setEnabled(mainWindow.nextButton.isEnabled());
+        mainWindow.depTreeViewPane.setTransducer(transducer);
     }
 
     @Override
-    public void actionPerformed(ActionEvent actionEvent) {
-        if (actionEvent.getSource().equals(mainWindow.nextButton)) {
-            if (currentlyDisplayedTree == convStack.size() - 1) {
-                ConversionState next = transducer.step(convStack.peek());
-                if (next != null) {
-                    convStack.push(next);
-                    currentlyDisplayedTree += 1;
-                } else {
-                    mainWindow.nextButton.setEnabled(false);
-                }
-            } else {
-                currentlyDisplayedTree += 1;
-            }
-            afterTreeOrTransducerUpdate();
-        } else if (actionEvent.getSource().equals(mainWindow.prevButton)) {
-            currentlyDisplayedTree -= 1;
-            afterTreeOrTransducerUpdate();
-            mainWindow.nextButton.setEnabled(true);
-        } else if (actionEvent.getSource().equals(mainWindow.lastButton)) {
-            currentlyDisplayedTree = convStack.size() - 1; // skip to last already calculated step
-            ConversionState next = transducer.step(convStack.peek());
-            while (next != null) {
-                convStack.push(next);
-                currentlyDisplayedTree += 1;
-                next = transducer.step(next);
-            }
-            mainWindow.nextButton.setEnabled(false);
-            afterTreeOrTransducerUpdate();
-        } else if (actionEvent.getSource().equals(mainWindow.firstButton)) {
-            currentlyDisplayedTree = 0;
-            afterTreeOrTransducerUpdate();
-            mainWindow.nextButton.setEnabled(true);
-        } else if (actionEvent.getSource().equals(mainWindow.menuItem)) {
-            Root tree = convStack.get(currentlyDisplayedTree).getTree();
-
-            Document outDoc = new DefaultDocument();
-            outDoc.createBundle().addTree(tree);
-            StringWriter sw = new StringWriter();
-            BufferedWriter bw = new BufferedWriter(sw);
-
-            new CoNLLUWriter().writeDocument(outDoc, bw);
-
-            new TextBoxPopup(mainWindow.frame, sw.toString());
+    public void actionPerformed(ActionEvent e) {
+        if(e.getSource() == mainWindow.menuItem) {
+            mainWindow.depTreeViewPane.showConLL(mainWindow.frame);
         }
     }
 }

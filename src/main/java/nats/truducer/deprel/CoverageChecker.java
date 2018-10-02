@@ -30,7 +30,7 @@ public class CoverageChecker {
     }
 
 
-    public void checkTree(Root original, Root generated) {
+    public TreeConversionStats checkTree(Root original, Root generated) {
         TreeConversionStats tStats = new TreeConversionStats(original, generated);
         tStats.check();
         punctuationNodes += tStats.getPunctuationNodes().size();
@@ -51,6 +51,8 @@ public class CoverageChecker {
         totalTreeCount++;
         if (tStats.isTreeFullyConverted())
             convertedTreeCount++;
+
+        return tStats;
     }
 
     private static void incOrInit(Map<String, Integer> map, String key) {

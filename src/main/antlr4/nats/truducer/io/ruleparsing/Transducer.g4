@@ -121,7 +121,6 @@ RULEBODY : ':-' ' '+ '{' (~('{'|'}')+? |'{' .+? '}')*? '}'
  {
              String groovyCode = getText();
              groovyCode = groovyCode.substring(groovyCode.indexOf("{") + 1, groovyCode.length() - 1);
-             System.out.println(groovyCode);
              setText(groovyCode);
  };
 

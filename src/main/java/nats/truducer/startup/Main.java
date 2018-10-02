@@ -1,10 +1,7 @@
 package nats.truducer.startup;
 
-import cz.ufal.udapi.core.Document;
 import cz.ufal.udapi.core.Node;
 import cz.ufal.udapi.core.Root;
-import cz.ufal.udapi.core.io.impl.CoNLLUReader;
-import cz.ufal.udapi.core.io.impl.CoNLLUWriter;
 import nats.truducer.data.*;
 import nats.truducer.deprel.CoverageChecker;
 import nats.truducer.deprel.PrecisionStats;
@@ -22,16 +19,14 @@ import net.sourceforge.argparse4j.inf.*;
 import org.antlr.v4.runtime.ANTLRFileStream;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
-import cz.ufal.udapi.core.impl.DefaultDocument;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static nats.io.TreeReaderWriter.fileToTree;
-import static nats.io.TreeReaderWriter.treeToFile;
+import static nats.truducer.io.TreeReaderWriter.fileToTree;
+import static nats.truducer.io.TreeReaderWriter.treeToFile;
 
 /**
  * Created by felix on 12/01/17.
@@ -166,9 +161,6 @@ public class Main {
 
         // ** added by Maximilian
         // creates a viewer for interactive Conversions and sets it for all the rules
-        // TODO set conversion dynamically for each rule
-        //  -> there probably won't be just one interactive conversion function that fits
-        //     all cases
         ConvGUIController interactiveWindow = new ConvGUIController();
         interactiveWindow.initWindow();
 
@@ -184,13 +176,16 @@ public class Main {
     }
 
     private static void convertDirMain(Namespace ns) throws Exception {
-        String transducerPath = ns.getString("rulefile");
-        String inDir = ns.getString("input_dir");
-        String outDir = ns.getString("output_dir");
+        convertDir(pathToTransducer(ns.getString("rulefile")),
+                ns.getString("input_dir"),
+                ns.getString("output_dir"), false, null);
+    }
+
+    public static void convertDir(Transducer t, String inDir, String outDir, boolean checkRulesUsed, ConvResultController controller) {
         if (!new File(outDir).exists())
             new File(outDir).mkdirs();
 
-        Transducer t = pathToTransducer(transducerPath);
+        t.storeRulesUsed = checkRulesUsed;
 
         // ** added by Maximilian
         // same as in convertMain!
@@ -223,6 +218,14 @@ public class Main {
             } catch (BlockedInteractionException e) {
                 interactiveFiles.add(file);
                 logger.info("conversion requires interaction, doing this in second run!");
+                continue;
+            }
+
+            TreeConversionStats stats = new TreeConversionStats(fileToTree(file), fileToTree(new File(outDir, file.getName())));
+            stats.check();
+            if(controller != null && (checkRulesUsed || !stats.isTreeFullyConverted())) {
+                stats.setRulesUsed(t.rulesUsed);
+                controller.add(new File(outDir, file.getName()), file, stats);
             }
         }
 
@@ -321,7 +324,7 @@ public class Main {
         Arrays.sort(files);
 
         CoverageChecker cc = new CoverageChecker();
-        ConvResultController gui = new ConvResultController();
+        ConvResultController gui = new ConvResultController(origDir, genDir);
 
         for (File file : files) {
             Root r = fileToTree(file);

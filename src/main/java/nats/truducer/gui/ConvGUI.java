@@ -12,8 +12,8 @@ import java.util.List;
 
 /**
  * Created by Maximilian on 19/09/18.
- * dirty copy of felix's MaximWindow
- * TODO either remove zoom slider or make it accessible (at the moment it is blocked by the popup)
+ * dirty copy of felix's MainWindow, as a concept, NOT FINAL!!
+ * TODO implement
  */
 public class ConvGUI {
 

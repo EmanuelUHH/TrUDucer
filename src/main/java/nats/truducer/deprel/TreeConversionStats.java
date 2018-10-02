@@ -2,6 +2,7 @@ package nats.truducer.deprel;
 
 import cz.ufal.udapi.core.Node;
 import cz.ufal.udapi.core.Root;
+import nats.truducer.data.Rule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ public class TreeConversionStats {
     private List<Node> blockerNodes = new ArrayList<>();
     private List<Node> indirectlyNotConvertedNodes = new ArrayList<>();
     private List<Node> punctuationNodes = new ArrayList<>();
+    private List<Rule> rulesUsed;
 
     public TreeConversionStats(Root originalTree, Root generatedTree) {
         this.originalTree = originalTree;
@@ -76,5 +78,13 @@ public class TreeConversionStats {
         boolean noBlockers = getBlockerNodes().size() == 0;
         boolean noIndirectlyNotConverted = getIndirectlyNotConvertedNodes().size() == 0;
         return noBlockers && noIndirectlyNotConverted;
+    }
+
+    public void setRulesUsed(List<Rule> rulesUsed) {
+        this.rulesUsed = rulesUsed;
+    }
+
+    public List<Rule> getRulesUsed() {
+        return rulesUsed;
     }
 }

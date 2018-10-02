@@ -1,4 +1,4 @@
-package nats.io;
+package nats.truducer.io;
 
 import cz.ufal.udapi.core.Document;
 import cz.ufal.udapi.core.Root;

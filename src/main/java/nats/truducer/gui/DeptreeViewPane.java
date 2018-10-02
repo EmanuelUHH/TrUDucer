@@ -258,4 +258,8 @@ public class DeptreeViewPane implements ChangeListener, ActionListener {
 
         new TextBoxPopup(frame, sw.toString());
     }
+
+    public Transducer getTransducer() {
+        return transducer;
+    }
 }

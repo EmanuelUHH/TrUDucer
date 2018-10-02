@@ -3,8 +3,10 @@ package nats.truducer.data;
 import cz.ufal.udapi.core.Root;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 /**
  * A Transducer consists mainly of a ruleset.
@@ -19,6 +21,9 @@ public class Transducer {
 
     public final List<Rule> rules;
     public final NodeClassifier nClassifier = new NodeClassifier();
+
+    public boolean storeRulesUsed = false;
+    public List<Rule> rulesUsed;
 
     public Transducer(List<Rule> rules) {
         this.rules = rules;
@@ -39,6 +44,10 @@ public class Transducer {
             } else {
                 break;
             }
+        }
+
+        if(storeRulesUsed) {
+            rulesUsed = states.stream().map(ConversionState::getAppliedRule).distinct().collect(Collectors.toList());
         }
 
         return states.peek().getTree();

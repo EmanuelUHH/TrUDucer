@@ -31,12 +31,17 @@ public class ConvResultController implements TreeSelectionListener, ActionListen
     private String inPath;
     private String outPath;
 
+    private String transducerPath;
+
     public ConvResultController(String inPath, String outPath) {
         createRootTreeNode();
         frontiers = new HashMap<>();
         rules = new HashMap<>();
         this.inPath = inPath;
         this.outPath = outPath;
+        this.transducerPath = "sample_rules_hdt.tud";
+
+
     }
 
     public void initWindow() {
@@ -101,14 +106,14 @@ public class ConvResultController implements TreeSelectionListener, ActionListen
             return;
         }
 
-        if(!node.isLeaf()) {
+        if(!node.isLeaf() || !(node.getUserObject() instanceof ConversionResult)) {
             // we can't render categories
             return;
         }
 
         ConversionResult cr = (ConversionResult) node.getUserObject();
         try {
-            gui.setTree(fileToTree(cr.getFile()), pathToTransducer("sample_rules_hdt.tud").nClassifier);
+            gui.setTree(fileToTree(cr.getFile()), pathToTransducer(transducerPath).nClassifier);
         } catch (IOException e1) {
             e1.printStackTrace();
         }
@@ -126,6 +131,7 @@ public class ConvResultController implements TreeSelectionListener, ActionListen
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
+                this.transducerPath = f.getPath();
             }
         }
 
@@ -137,14 +143,14 @@ public class ConvResultController implements TreeSelectionListener, ActionListen
                 return;
             }
 
-            if(!node.isLeaf()) {
+            if(!node.isLeaf() || !(node.getUserObject() instanceof ConversionResult)) {
                 // we can't render categories
                 return;
             }
 
             ConversionResult cr = (ConversionResult) node.getUserObject();
             try {
-                gui.setTree(fileToTree(cr.getSrcFile()), pathToTransducer("sample_rules_hdt.tud").nClassifier);
+                gui.setTree(fileToTree(cr.getSrcFile()), pathToTransducer(transducerPath).nClassifier);
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
@@ -152,6 +158,15 @@ public class ConvResultController implements TreeSelectionListener, ActionListen
 
         else if(e.getSource() == gui.convert) {
             gui.frame.setEnabled(false);
+
+            if(gui.reloadTransducer.getState()) {
+                try {
+                    gui.deptreeViewPane.setTransducer(pathToTransducer(transducerPath));
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+
             createRootTreeNode();
             frontiers.clear();
             rules.clear();

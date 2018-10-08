@@ -195,6 +195,8 @@ public class Main {
         interactiveWindow.setTransducer(t);
         t.rules.forEach(r -> r.setInteractiveConversion(interactiveWindow));
 
+        CoverageChecker cc = new CoverageChecker();
+
         File[] files = new File(inDir).listFiles();
         Arrays.sort(files);
 
@@ -221,8 +223,7 @@ public class Main {
                 continue;
             }
 
-            TreeConversionStats stats = new TreeConversionStats(fileToTree(file), fileToTree(new File(outDir, file.getName())));
-            stats.check();
+            TreeConversionStats stats = cc.checkTree(fileToTree(file), fileToTree(new File(outDir, file.getName())));
             if(controller != null && (checkRulesUsed || !stats.isTreeFullyConverted())) {
                 stats.setRulesUsed(t.rulesUsed);
                 controller.add(new File(outDir, file.getName()), file, stats);
@@ -233,7 +234,29 @@ public class Main {
         interactiveWindow.setInteractiveAllowed(true);
         for (File file : interactiveFiles) {
             convertFile(t, file, new File(outDir, file.getName()));
+
+            TreeConversionStats stats = cc.checkTree(fileToTree(file), fileToTree(new File(outDir, file.getName())));
+            if(controller != null && (checkRulesUsed || !stats.isTreeFullyConverted())) {
+                stats.setRulesUsed(t.rulesUsed);
+                controller.add(new File(outDir, file.getName()), file, stats);
+            }
         }
+
+        if(controller != null) {
+            int correctNodes = cc.getTotalConvertedCount();
+            int blockers = cc.getTotalBlockerCount();
+            int indirectly = cc.getTotalIndirectlyNotConvertedCount();
+
+            int totalWithoutPunct = correctNodes + blockers + indirectly;
+            double blockersPercentage = (double)blockers / (double)totalWithoutPunct;
+
+            controller.setPercentage(blockersPercentage * 100d);
+            Map<String, Integer> blockersIndividual = cc.getBlockersIndividual();
+            for(String blocker: blockersIndividual.keySet()) {
+                controller.setPercentage(blocker, 100d * (double) blockersIndividual.get(blocker) / (double) blockers);
+            }
+        }
+
 
         interactiveWindow.close();
     }

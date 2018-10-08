@@ -19,7 +19,9 @@ public class ConvResultGUI {
 
     public final JScrollPane scrollPane;
 
+    public final JCheckBoxMenuItem reloadTransducer;
     public final JMenuItem setTransducer;
+
     public final JMenuItem getOriginalTree;
 
     public final JCheckBoxMenuItem rememberRules;
@@ -33,6 +35,10 @@ public class ConvResultGUI {
 
         JMenu transducerMenu = new JMenu("Transducer");
         menuBar.add(transducerMenu);
+
+        reloadTransducer = new JCheckBoxMenuItem("automatically reload Transducer");
+        reloadTransducer.setState(true);
+        transducerMenu.add(reloadTransducer);
 
         setTransducer = new JMenuItem("set Transducer");
         transducerMenu.add(setTransducer);

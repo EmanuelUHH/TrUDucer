@@ -9,7 +9,7 @@ import nats.truducer.deprel.TreeComparator;
 import nats.truducer.deprel.TreeConversionStats;
 import nats.truducer.exceptions.BlockedInteractionException;
 import nats.truducer.gui.ConvGUIController;
-import nats.truducer.gui.ConvResultController;
+import nats.truducer.gui.sessionGUIController;
 import nats.truducer.gui.MainWindowController;
 import nats.truducer.io.ruleparsing.TransducerLexer;
 import nats.truducer.io.ruleparsing.TransducerParser;
@@ -72,8 +72,6 @@ public class Main {
         // conversion or the terminal view
         // TODO implement both views and actually choose between them
         convall.addArgument("-g", "--gui")
-                .setDefault("false")
-                .choices("true", "false")
                 .help("use graphical or terminal-based representation of graphs");
 
         Subparser test = subparsers.addParser("compare")
@@ -118,6 +116,15 @@ public class Main {
         searchTrees.addArgument("expr")
                 .help("The search expression given in the TrUDucer rule syntax.");
 
+        Subparser developmentSession = subparsers.addParser("session")
+                .help("starts a graphical tool for developing conversion rules");
+        developmentSession.addArgument("-t", "--transducer")
+                .nargs(1)
+                .help("The file containing the transformation rules.");
+        developmentSession.addArgument("input_dir")
+                .help("The directory containing the CoNLL files to be converted.");
+        developmentSession.addArgument("output_dir")
+                .help("The directory where the converted files should be generated.");
 
         Namespace ns = null;
         try {
@@ -144,6 +151,10 @@ public class Main {
                     break;
                 case "search":
                     searchMain(ns);
+                    break;
+                case "session":
+                    sessionMain(ns);
+                    break;
             }
         } catch (ArgumentParserException e) {
             parser.handleError(e);
@@ -178,10 +189,62 @@ public class Main {
     private static void convertDirMain(Namespace ns) throws Exception {
         convertDir(pathToTransducer(ns.getString("rulefile")),
                 ns.getString("input_dir"),
-                ns.getString("output_dir"), false, null);
+                ns.getString("output_dir"));
     }
 
-    public static void convertDir(Transducer t, String inDir, String outDir, boolean checkRulesUsed, ConvResultController controller) {
+    public static void convertDir(Transducer t, String inDir, String outDir) {
+        if (!new File(outDir).exists())
+            new File(outDir).mkdirs();
+
+        t.storeRulesUsed = false;
+
+        // ** added by Maximilian
+        // same as in convertMain!
+        ConvGUIController interactiveWindow = new ConvGUIController();
+        interactiveWindow.initWindow();
+
+        interactiveWindow.setTransducer(t);
+        t.rules.forEach(r -> r.setInteractiveConversion(interactiveWindow));
+
+        CoverageChecker cc = new CoverageChecker();
+
+        File[] files = new File(inDir).listFiles();
+        Arrays.sort(files);
+
+        // interactive conversions block the conversion process.
+        // better is be to convert in two phases, first all conversions
+        // that don't need user input, and only after that convert those that
+        // use interactive conversions. Then the user is free to move while
+        // the machine computes for most of the time.
+
+        // these are all the files requiring interaction, those will be
+        // converted in a second pass, after all other conversions are done.
+        List<File> interactiveFiles = new ArrayList<>();
+
+        // ** changed by Maximilian
+        // now first converts all non interactive files, catches those that
+        // require interactions and does those in a second run
+        interactiveWindow.setInteractiveAllowed(false);
+        for (File file : files) {
+            try {
+                convertFile(t, file, new File(outDir, file.getName()));
+            } catch (BlockedInteractionException e) {
+                interactiveFiles.add(file);
+                logger.info("conversion requires interaction, doing this in second run!");
+                continue;
+            }
+        }
+
+        // now convert all files which require interaction with user
+        interactiveWindow.setInteractiveAllowed(true);
+        for (File file : interactiveFiles) {
+            convertFile(t, file, new File(outDir, file.getName()));
+        }
+
+        interactiveWindow.close();
+    }
+
+    public static void convertDir(Transducer t, String inDir, String outDir, boolean checkRulesUsed, sessionGUIController controller) {
         if (!new File(outDir).exists())
             new File(outDir).mkdirs();
 
@@ -243,14 +306,16 @@ public class Main {
         }
 
         if(controller != null) {
-            int correctNodes = cc.getTotalConvertedCount();
+
             int blockers = cc.getTotalBlockerCount();
-            int indirectly = cc.getTotalIndirectlyNotConvertedCount();
 
-            int totalWithoutPunct = correctNodes + blockers + indirectly;
-            double blockersPercentage = (double)blockers / (double)totalWithoutPunct;
+            int convertedSentences = cc.getConvertedTreeCount();
+            int sentencesCount = cc.getTotalTreeCount();
 
-            controller.setPercentage(blockersPercentage * 100d);
+            // Perform relevant calculations.
+            double failedSentencePercentage = 1.0 - (double) convertedSentences / (double) sentencesCount;
+
+            controller.setPercentage(failedSentencePercentage * 100d);
             Map<String, Integer> blockersIndividual = cc.getBlockersIndividual();
             for(String blocker: blockersIndividual.keySet()) {
                 controller.setPercentage(blocker, 100d * (double) blockersIndividual.get(blocker) / (double) blockers);
@@ -268,7 +333,7 @@ public class Main {
         treeToFile(outFile, transduced);
     }
 
-    private static void testMain(Namespace ns) throws Exception {
+    private static void testMain(Namespace ns) {
         logger.info("Testing");
         String compDir = ns.getString("expected_dir");
         String genDir = ns.getString("actual_dir");
@@ -347,14 +412,11 @@ public class Main {
         Arrays.sort(files);
 
         CoverageChecker cc = new CoverageChecker();
-        ConvResultController gui = new ConvResultController(origDir, genDir);
 
         for (File file : files) {
             Root r = fileToTree(file);
             Root orig = fileToTree(new File(origDir + "/" + file.getName()));
-            TreeConversionStats tStats = cc.checkTree(orig, r);
-
-            gui.add(file, new File(origDir + "/" + file.getName()), tStats);
+            cc.checkTree(orig, r);
         }
 
         int correctNodes = cc.getTotalConvertedCount();
@@ -384,13 +446,50 @@ public class Main {
         logger.info("\n" + cc.getTableAsString());
         logger.info("\n" + cc.getBlockerStatsAsString());
 
-        gui.setPercentage(blockersPercentage * 100d);
+    }
+
+    private static void sessionMain(Namespace ns) {
+        String genDir = ns.getString("output_dir");
+        String origDir = ns.getString("input_dir");
+
+
+        File[] files = new File(genDir).listFiles();
+        Arrays.sort(files);
+
+        CoverageChecker cc = new CoverageChecker();
+        sessionGUIController gui = new sessionGUIController(origDir, genDir);
+
+        for (File file : files) {
+            Root r = fileToTree(file);
+            Root orig = fileToTree(new File(origDir + "/" + file.getName()));
+            TreeConversionStats tStats = cc.checkTree(orig, r);
+
+            gui.add(file, new File(origDir + "/" + file.getName()), tStats);
+        }
+
+        int blockers = cc.getTotalBlockerCount();
+
+        int convertedSentences = cc.getConvertedTreeCount();
+        int sentencesCount = cc.getTotalTreeCount();
+
+        // Perform relevant calculations.
+        double failedSentencePercentage = 1.0 - (double) convertedSentences / (double) sentencesCount;
+
+        gui.setPercentage(failedSentencePercentage * 100d);
         Map<String, Integer> blockersIndividual = cc.getBlockersIndividual();
         for(String blocker: blockersIndividual.keySet()) {
             gui.setPercentage(blocker, 100d * (double) blockersIndividual.get(blocker) / (double) blockers);
         }
 
         gui.initWindow();
+
+        String transducerPath = ns.getString("transducer");
+
+        if(transducerPath != null && !transducerPath.equals("")) {
+            transducerPath = transducerPath.replace("[", "");
+            transducerPath = transducerPath.replace("]", "");
+            gui.setTransducerPath(transducerPath);
+        }
     }
 
     private static void listMain(Namespace ns) {
@@ -460,7 +559,7 @@ public class Main {
         }
     }
 
-    private static ReplacementNode generateDummyReplacementNode(Tree matchTree) {
+    public static ReplacementNode generateDummyReplacementNode(Tree matchTree) {
         List<String> usedNames = matchTree.getUsedNames();
         ReplacementNode dummyParent = new ReplacementNode();
         dummyParent.setName(usedNames.stream().collect(Collectors.joining()));

@@ -117,12 +117,14 @@ frontier[Map<String, List<String>> expansions] returns [ Tree tree ] :
       )?
   '}' ;
 
-RULEBODY : ':-' ' '+ '{' (~('{'|'}')+? |'{' .+? '}')*? '}'
+RULEBODY : ':-' ' '+ GROOVY_BLOCK
  {
              String groovyCode = getText();
              groovyCode = groovyCode.substring(groovyCode.indexOf("{") + 1, groovyCode.length() - 1);
              setText(groovyCode);
  };
+
+fragment GROOVY_BLOCK : '{' (~('{'|'}') | GROOVY_BLOCK)* '}';
 
 IDENTIFIER : ('a'..'z'|'A'..'Z')('a'..'z'|'A'..'Z'|'0'..'9')* ;
 

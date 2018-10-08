@@ -41,7 +41,8 @@
 
 expansion predicatePos = [VAFIN, VVFIN, VVPP, VVINF, VVIZU, ADJD, ADJA];
 expansion advclIndicator = [OBJA, OBJD, AUX];
-expansion noun = [NN, NE, FM, CARD]; #FM, CARD überwachen
+expansion noun = [NN, NE, FM, CARD, PDS, PIS, PPER]; #FM, CARD überwachen
+expansion prepos = [APPR, APPRART];
 
 ########## S-PRED invert 
 parent:$x({n:PRED(n2:PN(), ?predr), ?fr}, ?r) -> n2:$x(n:case(), parent:cop(), ?predr, ?r, ?fr);
@@ -120,6 +121,8 @@ p.predicatePos({n:ZEIT()}) -> p(n:obl ());
                 n:ZEIT()   ->   n:nmod();
 n:PP(?r) -> n:advmod(?r); # if no PN dependent it is simply advmod (100009) davor
 # n:PP(?r) -> n:case(?r); # 100020, 100025  darum    welches ist jetzt richtig?
+
+p.prepos:conj({n:PN(), ?fr}, ?r) -> n:conj(p:case(), ?fr, ?r);
 
 ########## ADV advmod
 n1:ADV(n2:OBJA2(), ?r) -> n2:acl(n1:cop(), ?r);   # 100135

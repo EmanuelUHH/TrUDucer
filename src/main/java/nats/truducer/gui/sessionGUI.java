@@ -10,7 +10,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeSelectionModel;
 import java.awt.*;
 
-public class ConvResultGUI {
+public class sessionGUI {
 
     public final JFrame frame;
     public final JTree tree;
@@ -27,7 +27,7 @@ public class ConvResultGUI {
     public final JCheckBoxMenuItem rememberRules;
     public final JMenuItem convert;
 
-    public ConvResultGUI(ConvResultController controller, DefaultMutableTreeNode root) {
+    public sessionGUI(sessionGUIController controller, DefaultMutableTreeNode root) {
         frame = new JFrame();
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
@@ -70,6 +70,7 @@ public class ConvResultGUI {
         tree = new JTree(treeModel);
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         tree.addTreeSelectionListener(controller);
+        tree.addMouseListener(controller);
 
         scrollPane = new JScrollPane(tree);
         scrollPane.setMaximumSize(new Dimension(400, 1800));

@@ -5,6 +5,7 @@ import cz.ufal.udapi.core.Root;
 import cz.ufal.udapi.core.impl.DefaultDocument;
 import cz.ufal.udapi.core.io.impl.CoNLLUReader;
 import cz.ufal.udapi.core.io.impl.CoNLLUWriter;
+import nats.truducer.data.NodeClassifier;
 import nats.truducer.data.Transducer;
 import nats.truducer.io.ruleparsing.TransducerLexer;
 import nats.truducer.io.ruleparsing.TransducerParser;
@@ -16,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TreeReaderWriter {
+
+    public static final NodeClassifier defaultNodeClassifier = new NodeClassifier();
 
     public static Transducer pathToTransducer(String path) throws IOException {
         ANTLRFileStream input = new ANTLRFileStream(path);
